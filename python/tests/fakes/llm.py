@@ -231,6 +231,8 @@ class FakeAnalyst:
             return self._sub_themes(prompt)
         if "JudgeOutput" in tools:
             return self._judge(prompt)
+        if "ExtractionOutput" in tools:
+            return self._extract(prompt)
         if "ExplainOutput" in tools:
             return self._explain(prompt)
         if "DraftFindings" in tools:
@@ -253,6 +255,44 @@ class FakeAnalyst:
             for key, name in keys[1:3]
         ]
         return _call("PositioningOutput", {"findings": findings})
+
+    def _extract(self, prompt: str) -> AIMessage:
+        """Copy values from the page like a careful model, plus two planted mistakes that code must
+        reject: a number missing from its quote, and a quote that is not on the page."""
+        features = re.findall(r"^- (\w+): ", prompt.split("# Task", 1)[1], flags=re.M)
+        page = prompt.split("# Page", 1)[1].split("# Stopping rule", 1)[0]
+        values = []
+        for feature in features:
+            for sentence in _sentences(page):
+                if _attribute(sentence) != feature:
+                    continue
+                value, unit = None, None
+                for u, pat in _UNITS:
+                    m = re.search(pat, sentence)
+                    if m and u != "percent":
+                        value, unit = float(m.group(1).replace(",", "")), u
+                        break
+                standard = (
+                    "WLTP" if "WLTP" in sentence else ("10-80%" if "10-80%" in sentence else None)
+                )
+                values.append(
+                    {
+                        "feature": feature,
+                        "found": True,
+                        "value": value,
+                        "unit": unit,
+                        "test_standard": standard,
+                        "region": None,
+                        "variant": None,
+                        "quote": sentence,
+                    }
+                )
+                break
+        if values:
+            bad = dict(values[0], value=999.0, unit="km")  # number not in the quote: value dropped
+            values.append(bad)
+            values.append(dict(values[0], quote="This sentence is not on the page at all."))
+        return _call("ExtractionOutput", {"values": values})
 
     def _judge(self, prompt: str) -> AIMessage:
         """First answer breaks the guard (invented number, unsupported 'widespread', unknown id);
