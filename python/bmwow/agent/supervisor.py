@@ -1,9 +1,9 @@
-"""Analysis graph: resolve the request, fan-out to the four agents in one superstep, fan-in to `collect`
-(SPEC §5).
+"""Analysis graph (SPEC §5): resolve the request, run the four agents in one superstep, validate their
+reports, structure the evidence per feature, then build and persist the hand-off.
 
                             ┌─> baseline_agent ────┐
                             ├─> competition_agent ─┤
-    START ─> resolve_request┼─> feedback_agent ────┼─> collect ─> END
+    START ─> resolve_request┼─> feedback_agent ────┼─> validate ─> structure_agent ─> collect ─> END
                   │         └─> trends_agent ──────┘
                   └─(resolve_error)─> END
 """
@@ -31,10 +31,14 @@ from bmwow.agent.models.evidence import (
 from .config import get_settings
 from .nodes import AGENT_RUNS
 from .nodes.common import AgentRun, agent_node
+from .nodes.structure import judge
 from .registry import ResolveError
 from .resolve import check_brief, resolve_request
+from .rules import load_rules
 from .sources import utcnow
 from .state import AnalysisState
+from .structure import assemble
+from .taxonomy import load_taxonomy
 from .tools.knowledge import get_backend
 from .validation import validate_report
 
@@ -63,8 +67,8 @@ def after_resolve(state: AnalysisState) -> str | list[str]:
     return list(AGENT_NODE_NAMES.values())
 
 
-async def collect(state: AnalysisState) -> dict[str, Any]:
-    """Deterministic fan-in: fill missing reports, final validation, build and persist the hand-off."""
+async def validate(state: AnalysisState) -> dict[str, Any]:
+    """Deterministic fan-in: fill missing reports and validate every report once more."""
     reports = dict(state.get("reports") or {})
     final: dict[AgentName, AgentReport] = {}
     for agent in AGENT_NAMES:
@@ -79,12 +83,28 @@ async def collect(state: AnalysisState) -> dict[str, Any]:
                 errors=["no report produced"],
             )
         final[agent] = validate_report(report)
+    return {"reports": final}
+
+
+async def structure_agent(state: AnalysisState) -> dict[str, Any]:
+    """One evidence package per feature (code), judged with a rubric (LLM) and guarded (code)."""
+    packages = assemble(state["reports"], state["brief"], load_rules())
+    assessments = await judge(state["brief"], await load_taxonomy(), packages)
+    return {"evidence_packages": packages, "feature_assessments": assessments}
+
+
+async def collect(state: AnalysisState) -> dict[str, Any]:
+    """Build and persist the hand-off. All four reports are always present; validation is idempotent,
+    so collect also holds this guarantee when mounted or called without the validate node."""
+    reports = (await validate(state))["reports"]
     analysis = SituationAnalysis(
         run_id=state["run_id"],
         request=state["request"],
         brief=state["brief"],
-        reports=final,
+        reports=reports,
         created_at=utcnow(),
+        evidence_packages=state.get("evidence_packages") or [],
+        feature_assessments=state.get("feature_assessments") or [],
     )
     analysis = await persist(analysis)
     return {"analysis": analysis}
@@ -128,8 +148,12 @@ def build_builder(agents: Mapping[AgentName, AgentRun] | None = None) -> StateGr
     )
     for agent in AGENT_NAMES:
         builder.add_node(AGENT_NODE_NAMES[agent], agent_node(agent, runs[agent]))
+    builder.add_node("validate", validate)
+    builder.add_node("structure_agent", structure_agent)
     builder.add_node("collect", collect)
-    builder.add_edge(list(AGENT_NODE_NAMES.values()), "collect")  # waits for all four
+    builder.add_edge(list(AGENT_NODE_NAMES.values()), "validate")  # waits for all four
+    builder.add_edge("validate", "structure_agent")
+    builder.add_edge("structure_agent", "collect")
     builder.add_edge("collect", END)
     return builder
 
@@ -144,6 +168,6 @@ def build_subgraph() -> CompiledStateGraph:
     """The same graph for mounting as one node in the downstream pipeline (inherits its checkpointer).
 
     The parent state must provide `run_id` and `request` (optionally a ready `brief`); it receives
-    `brief`, `resolve_error`, `reports` and `analysis`.
+    `brief`, `resolve_error`, `reports`, `evidence_packages`, `feature_assessments` and `analysis`.
     """
     return build_builder().compile(name="situation_analysis")

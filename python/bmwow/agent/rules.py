@@ -48,6 +48,7 @@ class StructureRules(_Rules):
     max_quotes_per_package: int
     widespread_min_ci_low: float
     thin_words: list[str]
+    lower_is_better: list[str]
 
 
 class CompetitionRules(_Rules):

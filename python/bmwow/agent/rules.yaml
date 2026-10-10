@@ -86,6 +86,8 @@ structure:
   max_quotes_per_package: 6
   widespread_min_ci_low: 0.02   # guard: "widespread" needs a customer share whose CI lower bound reaches this
   thin_words: [thin, small sample, limited data, few items, low n, uncertain]
+  # Features where a smaller number is better (charging minutes, price, consumption); others: larger.
+  lower_is_better: [fast_charging, affordable, efficiency, low_running_costs]
 
 competition:
   # Core features researched for every competitor, with the words a spec page uses for them.

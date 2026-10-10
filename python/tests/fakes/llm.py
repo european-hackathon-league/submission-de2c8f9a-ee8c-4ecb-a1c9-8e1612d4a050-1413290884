@@ -229,6 +229,8 @@ class FakeAnalyst:
             return self._positioning(prompt)
         if "SubThemeOutput" in tools:
             return self._sub_themes(prompt)
+        if "JudgeOutput" in tools:
+            return self._judge(prompt)
         if "ExplainOutput" in tools:
             return self._explain(prompt)
         if "DraftFindings" in tools:
@@ -251,6 +253,61 @@ class FakeAnalyst:
             for key, name in keys[1:3]
         ]
         return _call("PositioningOutput", {"findings": findings})
+
+    def _judge(self, prompt: str) -> AIMessage:
+        """First answer breaks the guard (invented number, unsupported 'widespread', unknown id);
+        after the revision prompt it answers from the package. reliable_software stays wrong."""
+        feature = re.search(r"^# Feature: .+? \((.+?)\)$", prompt, flags=re.M).group(1)
+        customers = prompt.split("## Customers", 1)[1].split("\n## ", 1)[0]
+        lines = re.findall(r"^- \[(F-[\w-]+)\] (\w+), (.+)$", customers, flags=re.M)
+        revised = "Guard violations" in prompt
+        if not revised or feature == "reliable_software":
+            return _call(
+                "JudgeOutput",
+                {
+                    "assessment": "gap",
+                    "what_exactly": "Everything",
+                    "widespread": "widespread",
+                    "certainty": "high",
+                    "brand_or_safety_relevant": False,
+                    "reasoning": [
+                        {"text": "99% of customers complain.", "cited_ids": ["F-feedback-999"]}
+                    ],
+                },
+            )
+        if not lines:
+            return _call(
+                "JudgeOutput",
+                {
+                    "assessment": "unclear",
+                    "what_exactly": "No customer evidence",
+                    "widespread": "unclear",
+                    "certainty": "low",
+                    "brand_or_safety_relevant": False,
+                    "reasoning": [
+                        {"text": "The package has no customer evidence.", "cited_ids": []}
+                    ],
+                },
+            )
+        fid, direction, rest = lines[0]
+        assessment = {"problem": "gap", "request": "demand", "strength": "strength"}.get(
+            direction, "unclear"
+        )
+        thin = ", thin" in rest
+        text = f"Customers report a {direction} here" + (
+            " but the sample is thin." if thin else "."
+        )
+        return _call(
+            "JudgeOutput",
+            {
+                "assessment": assessment,
+                "what_exactly": f"{direction} about {feature}",
+                "widespread": "limited",
+                "certainty": "low" if thin else "medium",
+                "brand_or_safety_relevant": False,
+                "reasoning": [{"text": text, "cited_ids": [fid]}],
+            },
+        )
 
     def _sub_themes(self, prompt: str) -> AIMessage:
         texts = re.findall(r"^\[(T\d+)\] (.+)$", prompt, flags=re.M)

@@ -200,6 +200,110 @@ class ProductBrief(BaseModel):
         return None
 
 
+# ---------------------------------------------------------------- structure_agent (per feature)
+
+
+class FactRef(BaseModel):
+    """One fact of a package, rendered by code, with the finding it comes from."""
+
+    finding_id: str
+    agent: AgentName
+    subject: str
+    text: str
+
+
+class ValueComparison(BaseModel):
+    """Competitor values of one feature that are comparable (same unit, condition and region)."""
+
+    unit: str
+    condition: str  # test standard / qualifier, e.g. "WLTP"; values under different ones never mix
+    region: str | None
+    n: int
+    minimum: float
+    median: float
+    maximum: float
+    lower_is_better: bool
+    ours: float | None = None
+    ours_rank: int | None = None  # 1 = best among competitors + ours
+    field_size: int | None = None
+    ours_vs_median: float | None = None  # (ours - median) / |median|
+    finding_ids: list[str] = Field(default_factory=list)
+
+
+class CustomerSignal(BaseModel):
+    finding_id: str
+    direction: Direction
+    region: str | None
+    share: float
+    k: int
+    n: int
+    ci_low: float
+    ci_high: float
+    thin: bool
+    differs_from: str | None = None  # other regions, when the region test is significant
+    p_value: float | None = None
+
+
+class TrendSignal(BaseModel):
+    finding_id: str
+    claim: str
+    polarity: Literal["positive", "negative", "neutral", "demand"]
+    horizon: Literal["now", "1-2y", "3y+"] | None
+    n_independent_sources: int | None
+    thin: bool
+
+
+class Quote(BaseModel):
+    source_id: str
+    direction: Direction | None
+    text: str
+
+
+class EvidencePackage(BaseModel):
+    """Everything the four agents found about one feature, as facts. No verdict: structure_agent's
+    judgment reads this, and its guard checks the judgment against it."""
+
+    attribute: str
+    label: str
+    importance: float  # ranking only: largest CI lower bound of a customer problem/request share
+    ours: list[FactRef] = Field(default_factory=list)
+    competitor_values: list[ValueComparison] = Field(default_factory=list)
+    competitor_facts: list[FactRef] = Field(default_factory=list)
+    customers: list[CustomerSignal] = Field(default_factory=list)
+    sub_themes: list[SubTheme] = Field(default_factory=list)
+    trends: list[TrendSignal] = Field(default_factory=list)
+    comparisons: list[str] = Field(default_factory=list)  # factual sentences computed by code
+    quotes: list[Quote] = Field(default_factory=list)  # representative and counter-evidence
+    coverage: list[str] = Field(default_factory=list)  # missing views and data availability
+    finding_ids: list[str] = Field(default_factory=list)
+    source_ids: list[str] = Field(default_factory=list)
+
+
+Assessment = Literal["gap", "strength", "hygiene_factor", "demand", "unclear", "not_assessed"]
+
+
+class GuardCheck(BaseModel):
+    rule: str
+    ok: bool
+    detail: str = ""
+
+
+class FeatureAssessment(BaseModel):
+    """structure_agent's judgment of one feature, checked by code against its evidence package."""
+
+    attribute: str
+    assessment: Assessment
+    what_exactly: str = ""  # the concrete issue or wish, e.g. a sub-theme
+    widespread: Literal["widespread", "limited", "unclear"] = "unclear"
+    certainty: Confidence = "low"
+    brand_or_safety_relevant: bool = False
+    reasoning: str = ""
+    cited_ids: list[str] = Field(default_factory=list)
+    guard: list[GuardCheck] = Field(default_factory=list)
+    guard_status: Literal["passed", "revised", "flagged", "skipped"] = "skipped"
+    note: str = ""  # why the feature was not assessed, if so
+
+
 class OntologyPersistence(BaseModel):
     """Optional ontology write outcome, independent of analysis completion and human review."""
 
@@ -215,3 +319,6 @@ class SituationAnalysis(BaseModel):  # the hand-off object
     created_at: datetime
     # None means no outcome was recorded, including analyses saved before this field existed.
     ontology_persistence: OntologyPersistence | None = None
+    # Optional additions from structure_agent: one evidence package and one assessment per feature.
+    evidence_packages: list[EvidencePackage] = Field(default_factory=list)
+    feature_assessments: list[FeatureAssessment] = Field(default_factory=list)

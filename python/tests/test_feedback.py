@@ -151,3 +151,46 @@ async def test_missing_region_and_missing_backend_are_reported(monkeypatch):
     assert report.status == "partial" and not report.errors and not report.findings
     assert report.availability[0].source == "feedback"
     assert report.availability[0].status == "unavailable"
+
+
+def test_knowledge_layer_mapping_wins_and_only_active_features_count():
+    from bmwow.agent.taxonomy import Taxonomy
+    from bmwow.knowledge.records import FeedbackClassification
+    from bmwow.ontology.models import SqlLocator
+    from tests.fakes.data import _aspect
+
+    loc = SqlLocator(kind="sql", table="t", record_key="k", original_locator=None)
+    ontology_taxonomy = Taxonomy({"powertrain": ["electric_range", "ac_charging"]})
+    item = fake_feedback()[0].model_copy(
+        update={
+            "aspects": [
+                _aspect(
+                    "x", 1, "Electrification & Charging", "Electric Range", "Praise", "Likes", None
+                ),
+                _aspect(
+                    "x", 2, "Seats & Comfort", "Seating, ventilate / heat", "Praise", None, None
+                ),
+            ],
+            "classifications": [
+                FeedbackClassification(
+                    feedback_type="Likes",
+                    vfc_category="Electric Range",
+                    vfc_issue=None,
+                    vfc_combined="Electric Range : Like",
+                    attribute="electric_range",
+                    mapping_status="reviewed",
+                    locator=loc,
+                )
+            ],
+        }
+    )
+    found, _ = feedback.mentions_of(item, "EU", ontology_taxonomy)
+    # the curated mapping names the ontology feature; the alias target (seat_ventilation) is not part
+    # of this taxonomy, so that mention stays at its area
+    assert [m.attribute for m in found] == ["electric_range", "unmapped:seats_comfort"]
+    assert found[0].direction == "strength"
+    # an item without aspects falls back to its original classifications
+    bare = item.model_copy(update={"aspects": []})
+    assert [m.attribute for m in feedback.mentions_of(bare, "EU", ontology_taxonomy)[0]] == [
+        "electric_range"
+    ]

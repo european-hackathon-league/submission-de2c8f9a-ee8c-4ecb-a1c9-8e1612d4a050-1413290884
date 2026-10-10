@@ -41,6 +41,7 @@ from ..prompting import render_prompt
 from ..rules import feature_for_term, is_generic_term, load_rules
 from ..sources import clip, feedback_source
 from ..stats import is_thin, two_proportion_p, wilson_interval
+from ..taxonomy import Taxonomy
 from ..tools.feedback_stats import exact_dedupe, normalize_text
 from ..tools.knowledge import FeedbackFilter, FeedbackItem
 from .common import AgentContext, Polarity, structured_call
@@ -98,15 +99,36 @@ def direction_of(feedback_type: str | None, issue_type: str | None) -> Direction
     return "problem"
 
 
-def mentions_of(item: FeedbackItem, region: str) -> tuple[list[Mention], list[Mention]]:
-    """(feature mentions, unclassified mentions) of one item."""
+def resolve_feature(
+    term: str | None, label: str | None, mapped: str | None, taxonomy: Taxonomy
+) -> str | None:
+    """Feature of a mention, in order: the knowledge layer's mapping (ontology / curated VFC
+    mapping), then the interim alias in rules.yaml; only features of the active taxonomy count."""
+    for candidate in (mapped, feature_for_term(term), feature_for_term(label)):
+        if candidate and candidate in taxonomy.area_of:
+            return candidate
+    return None
+
+
+def mentions_of(
+    item: FeedbackItem, region: str, taxonomy: Taxonomy
+) -> tuple[list[Mention], list[Mention]]:
+    """(feature mentions, unclassified mentions) of one item. Uses the imported aspects; items
+    without aspects fall back to their original VFC classifications."""
     found: list[Mention] = []
     unclassified: list[Mention] = []
     text = normalize_text(item.text)
+    mapped = {
+        normalize_text(c.vfc_category): c.attribute
+        for c in item.classifications
+        if c.vfc_category and c.attribute
+    }
     for aspect in item.aspects:
         term = (aspect.aspect_term or aspect.aspect_label or aspect.vfc_category or "").strip()
         quote = aspect.quote if aspect.quote and normalize_text(aspect.quote) in text else None
-        feature = feature_for_term(term) or feature_for_term(aspect.aspect_label)
+        feature = resolve_feature(
+            term, aspect.aspect_label, mapped.get(normalize_text(term)), taxonomy
+        )
         area = aspect.vfc_category or ""
         direction = direction_of(aspect.feedback_type, aspect.issue_type)
         if feature is None and area.lower() == UNCLASSIFIED:
@@ -119,6 +141,18 @@ def mentions_of(item: FeedbackItem, region: str) -> tuple[list[Mention], list[Me
         attribute = feature or f"unmapped:{_slug(area or term)}"
         found.append(
             Mention(item.item_id, region, attribute, direction, term, is_generic_term(term), quote)
+        )
+    if item.aspects:
+        return found, unclassified
+    for c in item.classifications:
+        term = (c.vfc_category or "").strip()
+        if not term or term.lower() == "no_class_found":
+            continue
+        feature = resolve_feature(term, c.vfc_combined, c.attribute, taxonomy)
+        direction = direction_of(c.feedback_type, c.vfc_issue)
+        attribute = feature or f"unmapped:{_slug(term)}"
+        found.append(
+            Mention(item.item_id, region, attribute, direction, term, is_generic_term(term), None)
         )
     return found, unclassified
 
@@ -158,7 +192,7 @@ async def run(ctx: AgentContext) -> None:
     mentions: list[Mention] = []
     unclassified: list[Mention] = []
     for item in items:
-        found, other = mentions_of(item, region_of[item.item_id])
+        found, other = mentions_of(item, region_of[item.item_id], ctx.taxonomy)
         mentions += found
         unclassified += other
     ctx.stats["n_mentions"] = len(mentions)
