@@ -48,7 +48,9 @@ contracts/ontology/           Shared JSON artifacts for frontend, agents, and da
   source-mappings.json         Curated mappings from supplied raw columns
   examples/synthetic.json     Shareable integration fixture, with invented evidence
 docs/ontology.md              Ontology meaning, design factors, and integration guidance
+docs/ontology-consumers.md    Worked dossier and frontend/orchestration handoff
 docs/web-research.md          Proposed web evidence collection contract
+scripts/inspect_parking_dossier.py  Runnable synthetic four-question example
 tests/ontology/               Contract, graph, interoperability, and CLI tests
 raw_data/                     Local BMW data and sample; ignored by Git
 src/app/                      Next.js frontend
@@ -154,6 +156,11 @@ Frontend checks remain `pnpm lint`, `pnpm fmt:check`, and `pnpm build`. Read the
 applicable installed Next.js guide as directed by `AGENTS.md` before frontend changes.
 
 ## Team handoff
+
+Start with the [consumer guide](docs/ontology-consumers.md) and run
+`uv run python scripts/inspect_parking_dossier.py`. It answers the four product
+questions from the existing dossier while retaining each edge's target and
+rationale. Add `--json` for the existing generated RequirementDossier payload.
 
 - **Ontology/backend:** import `bmwow.ontology` and extend the shared Python package.
   See [ontology guide](docs/ontology.md) for entity meaning, limits, IDs, and revisions.
