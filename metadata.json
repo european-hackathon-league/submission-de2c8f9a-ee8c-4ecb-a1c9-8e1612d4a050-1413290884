@@ -3,13 +3,14 @@
   "checkpoint_id": "01M4KTGDAQBKM3E4C9JW28FT6K",
   "strategy": "manual-commit",
   "branch": "chore/tidy-layout",
-  "checkpoints_count": 12,
+  "checkpoints_count": 13,
   "files_touched": [
     "package.json",
     "pnpm-lock.yaml",
     "scripts/preprocess.ts",
     "src/app/globals.css",
-    "src/app/layout.tsx"
+    "src/app/layout.tsx",
+    "src/db/schema.ts"
   ],
   "sessions": [
     {
@@ -59,6 +60,13 @@
       "transcript": "/6/full.jsonl",
       "compact_transcript": "/6/transcript.jsonl",
       "content_hash": "/6/content_hash.txt",
+      "prompt": ""
+    },
+    {
+      "metadata": "/7/metadata.json",
+      "transcript": "/7/full.jsonl",
+      "compact_transcript": "/7/transcript.jsonl",
+      "content_hash": "/7/content_hash.txt",
       "prompt": ""
     }
   ],
