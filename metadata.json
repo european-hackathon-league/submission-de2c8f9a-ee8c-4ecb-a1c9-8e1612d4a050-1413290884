@@ -2,7 +2,6 @@
   "cli_version": "0.11.4",
   "checkpoint_id": "01M4KTRH9RR7A9XVXZV4FVA7BY",
   "strategy": "manual-commit",
-  "branch": "chore/tidy-layout",
   "checkpoints_count": 14,
   "files_touched": [
     "AGENTS.md",
