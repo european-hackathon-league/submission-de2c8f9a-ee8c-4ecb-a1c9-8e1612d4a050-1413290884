@@ -3,7 +3,7 @@
   "checkpoint_id": "01M4KTGDAQBKM3E4C9JW28FT6K",
   "strategy": "manual-commit",
   "branch": "chore/tidy-layout",
-  "checkpoints_count": 13,
+  "checkpoints_count": 14,
   "files_touched": [
     "package.json",
     "pnpm-lock.yaml",
@@ -67,6 +67,13 @@
       "transcript": "/7/full.jsonl",
       "compact_transcript": "/7/transcript.jsonl",
       "content_hash": "/7/content_hash.txt",
+      "prompt": ""
+    },
+    {
+      "metadata": "/8/metadata.json",
+      "transcript": "/8/full.jsonl",
+      "compact_transcript": "/8/transcript.jsonl",
+      "content_hash": "/8/content_hash.txt",
       "prompt": ""
     }
   ],
