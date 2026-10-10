@@ -38,12 +38,16 @@ reset, or clean there. Do each task in its own worktree, on its own branch:
 
 ```sh
 git fetch origin
-git worktree add -b <type>/<slug> ../bmwow-worktrees/<slug> origin/main
-cd ../bmwow-worktrees/<slug>
+git worktree add -b <type>/<slug> .worktrees/<slug> origin/main
+cd .worktrees/<slug>
 MAIN="$(git rev-parse --path-format=absolute --git-common-dir)/.."
 cp "$MAIN/.env" .env                          # ignored files are not shared
 entire configure --local --skip-push-sessions # per worktree; see README
 ```
+
+Worktrees live in `.worktrees/` at the root of the main checkout, which Git, the
+linters, and TypeScript ignore. Run `git worktree add` from the main checkout,
+not from inside another worktree, so they don't nest.
 
 - **Frontend:** run `pnpm install` in each worktree; it is fast thanks to pnpm's
   shared store. `.next/` and `node_modules/` belong to each worktree. If a dev

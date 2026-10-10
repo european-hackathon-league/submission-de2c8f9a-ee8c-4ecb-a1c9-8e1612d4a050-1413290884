@@ -34,6 +34,9 @@ dist/
 # production
 /build
 
+# Agent worktrees (see AGENTS.md)
+/.worktrees/
+
 # misc
 .DS_Store
 *.pem

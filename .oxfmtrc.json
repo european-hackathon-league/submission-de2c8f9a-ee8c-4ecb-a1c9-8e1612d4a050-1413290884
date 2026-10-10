@@ -6,6 +6,7 @@
     ".entire",
     ".factory",
     ".opencode",
+    ".worktrees",
     ".next",
     "contracts",
     "data",
