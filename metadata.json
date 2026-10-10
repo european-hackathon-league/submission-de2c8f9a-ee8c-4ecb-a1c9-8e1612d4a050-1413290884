@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KMA31ZDCG26WTPZB0E2RM7",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 14,
+  "files_touched": [
+    "docs/data-layer-handoff-prompt.md",
+    "scripts/example_request.json",
+    "src/agent/models.yaml",
+    "src/agent/nodes/feedback.py",
+    "src/agent/prompting.py",
+    "src/agent/regions.yaml",
+    "src/agent/registry.py",
+    "src/agent/resolve.py",
+    "src/agent/tools/graph_rag.py",
+    "src/agent/tools/knowledge.py",
+    "src/models/evidence.py",
+    "src/models/knowledge.py",
+    "tests/test_region_scoping.py",
+    "tests/test_resolve.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 164,
+    "cache_creation_tokens": 255721,
+    "cache_read_tokens": 15876611,
+    "output_tokens": 119897,
+    "api_call_count": 82
+  }
+}

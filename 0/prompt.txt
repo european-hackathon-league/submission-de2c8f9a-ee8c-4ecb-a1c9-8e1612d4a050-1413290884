@@ -1,0 +1,60 @@
+I updated the agent_spec.md. I changed the input structure so that it should consider the input (car model registry and region to focus on). update the project corespondingly. Any questions?
+
+---
+
+explain the pipeline of current project of the agent/ in detail, so that i can understand the flow from input to intermidiate output and the intermidiate i/o between the agent nodes
+
+---
+
+Explain shorter and first more highlevel
+
+---
+
+the input should only be "model_code:{G60, F70, and G68}" and the regions:{"EU", CN, US"]. the region input is optional. if the region input is none, then the agent nodes should consider all regions input.
+
+---
+
+@"/home/jelie/.claude/uploads/f502b972-4faa-465a-963d-f1659345bf68/REDACTED.pptx" here is more context to the project. Should we introduce some bias to the prompt or tools or optimize the orchestration layer to optimize it based on PM perspectives? Is it clear by what i mean and do you have questions?
+
+---
+
+<!-- attach -->
+> Prefer findings on attributes and target values: “Competitor A charges 10–80% in 22 min”, not “charging is important”.
+> Ask explicitly for value ranges and thresholds, because the specification step needs numbers.
+
+for this part maybe add also to search for which aspects are important from customer perspectives (from my thought for example from the frequency of certain features requested) and/or build a category features or something like that also. What do you think? or do you think that the features should be predefined? I'm not sure
+
+---
+
+<!-- attach -->
+> Where the taxonomy lives: should it move to the teammates’ ontology Feature nodes, or stay in our taxonomy.yaml for now?
+
+explain very simple what do you understand of this.
+
+What i understand that the ontology part organize the data into graph and the agent nodes read that.
+
+---
+
+@"/home/jelie/.claude/uploads/f502b972-4faa-465a-963d-f1659345bf68/ceef9029-F70_OptionList.PDF" so just to clarify our idea and project currently.
+
+Input data: (see raw_data/)
+Baseline: previous model data (check F70_OptionList.pdf for an example, static given data), sales volume (static given dataset)
+competition agent: search the model competitor of the same market (e.g. 7er series compare with luxury level car)
+Feedback agent: evaluate the customer feedback (static given data), and from review video or forum? (should be weight smaller than actual customer feedback)
+Trend agent: anticipate trend and see the market competitor??
+
+Is that align with what we did sofar?
+
+---
+
+so what we thought: clean the raw_data as sql (to be implemented, my teammates still doing that), then part of cleaned data is structured as ontology (i think the tabular data one that is feasible and not feedback data -> what do you think?). then the ontology data and other cleaned data is fed to corresponding agent.
+
+Is that logical and what do you think of it? be critical
+
+---
+
+so which data should be transformed into ontology and which one should be kept as sql? Then, so the agent nodes should take 2 different data format (ontology and sql)?
+
+---
+
+for that part, based on our discussion, write a prompt for my teammates' ai to update that part. it should give his ai model understanding to execute and implement our discussion
