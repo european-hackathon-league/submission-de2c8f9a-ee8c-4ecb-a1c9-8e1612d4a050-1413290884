@@ -20,6 +20,11 @@ uv run python -m scripts.inspect_neon_feedback --env-file ../.env  # private Neo
 The Neon check needs `DATABASE_URL` and makes no LLM, embedding, or web calls; see
 [the knowledge layer guide](../docs/data-layer.md#run-the-feedback-slice).
 
+For private sales/study imports and the combined snapshot/Neon service, follow
+[the ingestion plan](../docs/knowledge-ingestion.md). The analysis CLI accepts
+`--snapshot`, `--knowledge-config`, and `--env-file`; `--resolve-only` checks the
+brief without provider calls. Run its aggregate inspection command before analysis.
+
 Add dependencies with `uv add <pkg>` or `uv add --dev <pkg>`, and commit
 `pyproject.toml` and `uv.lock` together.
 
@@ -28,12 +33,13 @@ Add dependencies with `uv add <pkg>` or `uv add --dev <pkg>`, and commit
 ```text
 bmwow/ontology/   Canonical Pydantic models, relationship rules, graph validation,
                   deterministic tools, contract generator (bmwow-schema, bmwow-validate)
-bmwow/knowledge/  Typed reads, graph snapshots, read-only Neon feedback queries
+bmwow/knowledge/  Snapshot/Neon/combined reads, curation manifests, workbook import,
+                  validated local candidate acceptance
 bmwow/agent/      Situation-analysis orchestration v1 (LangGraph); see bmwow/agent/README.md
   models/         v1 evidence DTOs (knowledge records are reexports)
   knowledge_bridge/  v1 module paths that delegate to bmwow.knowledge
 tests/            ontology/, knowledge/, and agent tests; tests/fakes/ hold in-memory backends
-scripts/          Runnable synthetic examples and the v1 analysis CLI
+scripts/          Synthetic examples, private import/inspection, and the v1 analysis CLI
 ```
 
 ## Ontology contract
@@ -63,6 +69,13 @@ are ISO dates, and timestamps must include a timezone.
 
 Version 0.2.0 is a breaking wire extension of v0.1.0. See the
 [migration guide](../docs/ontology.md#migrating-v010-consumers-and-local-samples).
+The combined knowledge milestone does not change that ontology version or the
+existing v1 read records. SQL feedback/aspects remain read projections until an
+explicit graph ingestion creates their SourceDocument/Evidence/Signal chains.
+`FileCandidateStore` validates and atomically accepts non-Requirement candidates
+against an expected snapshot fingerprint. Requirement proposals and authenticated
+human Decisions require their own service write paths; the analysis write hook
+is still unconnected. See [the write boundary](../docs/data-layer.md#candidate-acceptance-and-orchestration-handoff).
 
 To change the contract:
 
