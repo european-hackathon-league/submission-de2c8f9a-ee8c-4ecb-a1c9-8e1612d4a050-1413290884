@@ -5,6 +5,11 @@
       "type": "local",
       "command": ["pnpm", "dlx", "shadcn@latest", "mcp"],
       "enabled": true
+    },
+    "neon": {
+      "type": "remote",
+      "url": "https://mcp.neon.tech/mcp",
+      "enabled": true
     }
   },
   "permission": {
