@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KTGDAQBKM3E4C9JW28FT6K",
+  "session_id": "ses_ed8e005cbffeSGHFGnRpDzdoTv",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T21:11:45.241515Z",
+  "branch": "chore/tidy-layout",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "scripts/preprocess.ts"
+  ],
+  "agent": "OpenCode",
+  "model": "anthropic.claude-opus-5-5",
+  "turn_id": "3c88c82178a4",
+  "checkpoint_transcript_start": 9,
+  "transcript_lines_at_start": 9,
+  "compact_transcript_start": 9,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T21:11:45.230425Z",
+    "agent_lines": 2188,
+    "agent_removed": 67,
+    "human_added": 67,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2255,
+    "total_lines_changed": 2380,
+    "agent_percentage": 94.74789915966386,
+    "metric_version": 2
+  }
+}
