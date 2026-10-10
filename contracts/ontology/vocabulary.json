@@ -1,0 +1,174 @@
+{
+  "ontology_version": "0.1.0",
+  "node_types": {
+    "SourceDocument": {
+      "description": "A specific file, SQL source, or captured web page; records origin, retrieval date, and independence."
+    },
+    "VehicleModel": {
+      "description": "A BMW or competitor model scoped to generation, model year, and variant when known."
+    },
+    "Market": {
+      "description": "An explicitly defined market; country-to-market mappings are configured, never guessed."
+    },
+    "Feature": {
+      "description": "A canonical capability or experience; VFC labels are source annotations and aliases."
+    },
+    "Evidence": {
+      "description": "An original record, excerpt, or statistic with a source locator. Repeated classification rows remain one feedback record."
+    },
+    "Signal": {
+      "description": "One scoped interpretation of evidence: customer experience, public opinion, competitor capability, or trend indicator."
+    },
+    "CustomerNeed": {
+      "description": "A customer outcome synthesized from supporting and challenging signals."
+    },
+    "Trend": {
+      "description": "A time-scoped synthesis of indicators; projections remain labeled as forecasts."
+    },
+    "Assumption": {
+      "description": "An explicit unproven premise with its impact and a validation plan."
+    },
+    "Requirement": {
+      "description": "A revisioned proposal for a successor vehicle, justified by evidence and reviewed separately by a human."
+    },
+    "Decision": {
+      "description": "An immutable human review event targeting one exact requirement revision."
+    }
+  },
+  "relationships": {
+    "IN_SOURCE": {
+      "source_types": [
+        "Evidence"
+      ],
+      "target_types": [
+        "SourceDocument"
+      ],
+      "description": "Locates original evidence in its captured source."
+    },
+    "DERIVED_FROM": {
+      "source_types": [
+        "Signal",
+        "Trend"
+      ],
+      "target_types": [
+        "Evidence",
+        "Signal"
+      ],
+      "description": "Traces an interpretation or trend to its inputs. Signals derive directly from Evidence."
+    },
+    "CONCERNS": {
+      "source_types": [
+        "Signal",
+        "CustomerNeed",
+        "Trend",
+        "Requirement"
+      ],
+      "target_types": [
+        "Feature"
+      ],
+      "description": "Associates an interpretation or proposal with a canonical feature."
+    },
+    "SUPPORTS": {
+      "source_types": [
+        "Signal",
+        "Trend"
+      ],
+      "target_types": [
+        "CustomerNeed",
+        "Requirement",
+        "Assumption"
+      ],
+      "description": "Provides supporting evidence, with an explicit rationale and scope-transfer explanation."
+    },
+    "CHALLENGES": {
+      "source_types": [
+        "Signal",
+        "Trend"
+      ],
+      "target_types": [
+        "CustomerNeed",
+        "Requirement",
+        "Assumption"
+      ],
+      "description": "Provides opposing or limiting evidence; sentiment alone does not determine this relationship."
+    },
+    "ADDRESSES": {
+      "source_types": [
+        "Requirement"
+      ],
+      "target_types": [
+        "CustomerNeed"
+      ],
+      "description": "States the customer outcome a requirement is intended to deliver."
+    },
+    "JUSTIFIED_BY": {
+      "source_types": [
+        "Requirement"
+      ],
+      "target_types": [
+        "Signal",
+        "Trend"
+      ],
+      "description": "Provides the evidence chain and rationale for a proposed requirement."
+    },
+    "DEPENDS_ON": {
+      "source_types": [
+        "Requirement",
+        "CustomerNeed",
+        "Trend"
+      ],
+      "target_types": [
+        "Assumption"
+      ],
+      "description": "Makes a forward-looking or inferential premise explicit."
+    },
+    "REVIEWS": {
+      "source_types": [
+        "Decision"
+      ],
+      "target_types": [
+        "Requirement"
+      ],
+      "description": "Targets one requirement revision without mutating the proposal or source evidence."
+    },
+    "COMPETES_WITH": {
+      "source_types": [
+        "VehicleModel"
+      ],
+      "target_types": [
+        "VehicleModel"
+      ],
+      "description": "A scoped competitive comparison chosen for a market and segment, not assumed from brand alone."
+    },
+    "SUPERSEDES": {
+      "source_types": [
+        "Signal",
+        "CustomerNeed",
+        "Trend",
+        "Assumption",
+        "Requirement"
+      ],
+      "target_types": [
+        "Signal",
+        "CustomerNeed",
+        "Trend",
+        "Assumption",
+        "Requirement"
+      ],
+      "description": "Links a newer revision to an older revision of the same entity type."
+    }
+  },
+  "domains": [
+    "exterior",
+    "interior",
+    "powertrain",
+    "driver_assistance",
+    "digital_experience",
+    "ownership_experience",
+    "cross_domain",
+    "unknown"
+  ],
+  "scope_authority": "properties.context is authoritative; do not separately maintain conflicting ABOUT edges.",
+  "review_state": "Derived from human Decision events for the exact Requirement id and revision. A new revision starts unreviewed.",
+  "storage": "SQL tables, join tables, or a NetworkX MultiDiGraph can represent the same contract. No storage engine is required by this ontology."
+}

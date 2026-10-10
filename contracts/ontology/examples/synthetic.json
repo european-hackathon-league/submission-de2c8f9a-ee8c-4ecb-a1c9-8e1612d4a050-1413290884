@@ -1,0 +1,1012 @@
+{
+  "ontology_version": "0.1.0",
+  "purpose": "fixture",
+  "as_of": "2026-10-10",
+  "description": "Entirely synthetic statements and web sources. Reserved example.invalid URLs are never fetched. No real competitor or trend claims, approvals, or market conclusions.",
+  "nodes": [
+    {
+      "id": "market:US",
+      "entity_key": "market:US",
+      "type": "Market",
+      "label": "United States",
+      "revision": 1,
+      "properties": {
+        "code": "US",
+        "name": "United States",
+        "country_codes": [
+          "US"
+        ],
+        "definition_notes": [
+          "Provided market group; country membership must be configured explicitly."
+        ]
+      }
+    },
+    {
+      "id": "vehicle:bmw-g60",
+      "entity_key": "vehicle:bmw-g60",
+      "type": "VehicleModel",
+      "label": "BMW 5 Series G60",
+      "revision": 1,
+      "properties": {
+        "brand": "BMW",
+        "vehicle_line": "5 Series",
+        "generation_code": "G60",
+        "model_year": null,
+        "variant": null,
+        "aliases": []
+      }
+    },
+    {
+      "id": "vehicle:example-sedan",
+      "entity_key": "vehicle:example-sedan",
+      "type": "VehicleModel",
+      "label": "Example Motors Example Sedan",
+      "revision": 1,
+      "properties": {
+        "brand": "Example Motors",
+        "vehicle_line": "Example Sedan",
+        "generation_code": null,
+        "model_year": null,
+        "variant": null,
+        "aliases": []
+      }
+    },
+    {
+      "id": "feature:parking-controls",
+      "entity_key": "feature:parking-controls",
+      "type": "Feature",
+      "label": "Parking-control usability",
+      "revision": 1,
+      "properties": {
+        "definition": "Parking-control usability",
+        "domains": [
+          "interior"
+        ],
+        "aliases": []
+      }
+    },
+    {
+      "id": "source:fixture-feedback",
+      "entity_key": "source:fixture-feedback",
+      "type": "SourceDocument",
+      "label": "Synthetic feedback_dataset",
+      "revision": 1,
+      "properties": {
+        "source_kind": "feedback_dataset",
+        "origin": "synthetic",
+        "location": {
+          "kind": "local_file",
+          "path": "contracts/ontology/examples/synthetic.json"
+        },
+        "publisher": null,
+        "publication_date": null,
+        "retrieved_at": "2026-10-10T15:47:12Z",
+        "content_hash": null,
+        "source_role": "unknown",
+        "independence_group": null,
+        "access": "public",
+        "quality_notes": [
+          "Synthetic fixture; no real-world claim."
+        ]
+      }
+    },
+    {
+      "id": "source:fixture-public",
+      "entity_key": "source:fixture-public",
+      "type": "SourceDocument",
+      "label": "Synthetic public_discussion",
+      "revision": 1,
+      "properties": {
+        "source_kind": "public_discussion",
+        "origin": "synthetic",
+        "location": {
+          "kind": "web",
+          "url": "https://example.invalid/discussion"
+        },
+        "publisher": null,
+        "publication_date": null,
+        "retrieved_at": "2026-10-10T15:47:12Z",
+        "content_hash": null,
+        "source_role": "unknown",
+        "independence_group": null,
+        "access": "public",
+        "quality_notes": [
+          "Synthetic fixture; no real-world claim."
+        ]
+      }
+    },
+    {
+      "id": "source:fixture-competitor",
+      "entity_key": "source:fixture-competitor",
+      "type": "SourceDocument",
+      "label": "Synthetic competitor_official",
+      "revision": 1,
+      "properties": {
+        "source_kind": "competitor_official",
+        "origin": "synthetic",
+        "location": {
+          "kind": "web",
+          "url": "https://example.invalid/competitor"
+        },
+        "publisher": null,
+        "publication_date": null,
+        "retrieved_at": "2026-10-10T15:47:12Z",
+        "content_hash": null,
+        "source_role": "unknown",
+        "independence_group": null,
+        "access": "public",
+        "quality_notes": [
+          "Synthetic fixture; no real-world claim."
+        ]
+      }
+    },
+    {
+      "id": "source:fixture-trend",
+      "entity_key": "source:fixture-trend",
+      "type": "SourceDocument",
+      "label": "Synthetic industry_report",
+      "revision": 1,
+      "properties": {
+        "source_kind": "industry_report",
+        "origin": "synthetic",
+        "location": {
+          "kind": "web",
+          "url": "https://example.invalid/trend"
+        },
+        "publisher": null,
+        "publication_date": null,
+        "retrieved_at": "2026-10-10T15:47:12Z",
+        "content_hash": null,
+        "source_role": "unknown",
+        "independence_group": null,
+        "access": "public",
+        "quality_notes": [
+          "Synthetic fixture; no real-world claim."
+        ]
+      }
+    },
+    {
+      "id": "evidence:fixture-customer",
+      "entity_key": "evidence:fixture-customer",
+      "type": "Evidence",
+      "label": "Synthetic customer",
+      "revision": 1,
+      "properties": {
+        "evidence_kind": "feedback_record",
+        "record_key": "customer",
+        "dedup_key": "evidence:fixture-customer",
+        "source_channel": null,
+        "locator": {
+          "kind": "spreadsheet",
+          "sheet": "Synthetic",
+          "range": "A2"
+        },
+        "raw_text": "Synthetic feedback: I find the parking controls confusing.",
+        "measurement": null,
+        "raw_classifications": [],
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "limitations": [
+          "One record or statistic does not establish population prevalence."
+        ]
+      }
+    },
+    {
+      "id": "signal:fixture-customer",
+      "entity_key": "signal:fixture-customer",
+      "type": "Signal",
+      "label": "Synthetic customer",
+      "revision": 1,
+      "properties": {
+        "signal_kind": "customer_feedback",
+        "statement": "Synthetic feedback: I find the parking controls confusing.",
+        "epistemic_status": "reported_experience",
+        "sentiment": "negative",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "public_context": null,
+        "capability": null,
+        "extraction_confidence": {
+          "level": "unassessed",
+          "reason": "Illustrative mapping; no calibrated extraction score."
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "evidence:fixture-public-positive",
+      "entity_key": "evidence:fixture-public-positive",
+      "type": "Evidence",
+      "label": "Synthetic public-positive",
+      "revision": 1,
+      "properties": {
+        "evidence_kind": "web_excerpt",
+        "record_key": "public-positive",
+        "dedup_key": "evidence:fixture-public-positive",
+        "source_channel": null,
+        "locator": {
+          "kind": "web",
+          "selector": null,
+          "text_fragment": "Synthetic opinion: I prefer a clearly identifiable physical parking control."
+        },
+        "raw_text": "Synthetic opinion: I prefer a clearly identifiable physical parking control.",
+        "measurement": null,
+        "raw_classifications": [],
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "limitations": [
+          "One record or statistic does not establish population prevalence."
+        ]
+      }
+    },
+    {
+      "id": "signal:fixture-public-positive",
+      "entity_key": "signal:fixture-public-positive",
+      "type": "Signal",
+      "label": "Synthetic public-positive",
+      "revision": 1,
+      "properties": {
+        "signal_kind": "public_sentiment",
+        "statement": "Synthetic opinion: I prefer a clearly identifiable physical parking control.",
+        "epistemic_status": "opinion",
+        "sentiment": "positive",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "public_context": {
+          "platform": "Example forum",
+          "author_role": "unknown",
+          "ownership_verified": null,
+          "sampling_method": "targeted_search",
+          "sampling_notes": [
+            "Synthetic purposive sample; no population denominator."
+          ]
+        },
+        "capability": null,
+        "extraction_confidence": {
+          "level": "unassessed",
+          "reason": "Illustrative mapping; no calibrated extraction score."
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "evidence:fixture-public-challenge",
+      "entity_key": "evidence:fixture-public-challenge",
+      "type": "Evidence",
+      "label": "Synthetic public-challenge",
+      "revision": 1,
+      "properties": {
+        "evidence_kind": "web_excerpt",
+        "record_key": "public-challenge",
+        "dedup_key": "evidence:fixture-public-challenge",
+        "source_channel": null,
+        "locator": {
+          "kind": "web",
+          "selector": null,
+          "text_fragment": "Synthetic opinion: I prefer parking controls on screen and fewer physical switches."
+        },
+        "raw_text": "Synthetic opinion: I prefer parking controls on screen and fewer physical switches.",
+        "measurement": null,
+        "raw_classifications": [],
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "limitations": [
+          "One record or statistic does not establish population prevalence."
+        ]
+      }
+    },
+    {
+      "id": "signal:fixture-public-challenge",
+      "entity_key": "signal:fixture-public-challenge",
+      "type": "Signal",
+      "label": "Synthetic public-challenge",
+      "revision": 1,
+      "properties": {
+        "signal_kind": "public_sentiment",
+        "statement": "Synthetic opinion: I prefer parking controls on screen and fewer physical switches.",
+        "epistemic_status": "opinion",
+        "sentiment": "negative",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "public_context": {
+          "platform": "Example forum",
+          "author_role": "unknown",
+          "ownership_verified": null,
+          "sampling_method": "targeted_search",
+          "sampling_notes": [
+            "Synthetic purposive sample; no population denominator."
+          ]
+        },
+        "capability": null,
+        "extraction_confidence": {
+          "level": "unassessed",
+          "reason": "Illustrative mapping; no calibrated extraction score."
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "evidence:fixture-competitor",
+      "entity_key": "evidence:fixture-competitor",
+      "type": "Evidence",
+      "label": "Synthetic competitor",
+      "revision": 1,
+      "properties": {
+        "evidence_kind": "web_excerpt",
+        "record_key": "competitor",
+        "dedup_key": "evidence:fixture-competitor",
+        "source_channel": null,
+        "locator": {
+          "kind": "web",
+          "selector": null,
+          "text_fragment": "Synthetic manufacturer claim: Example Sedan will offer a physical parking control as an option."
+        },
+        "raw_text": "Synthetic manufacturer claim: Example Sedan will offer a physical parking control as an option.",
+        "measurement": null,
+        "raw_classifications": [],
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:example-sedan"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "limitations": [
+          "One record or statistic does not establish population prevalence."
+        ]
+      }
+    },
+    {
+      "id": "signal:fixture-competitor",
+      "entity_key": "signal:fixture-competitor",
+      "type": "Signal",
+      "label": "Synthetic competitor",
+      "revision": 1,
+      "properties": {
+        "signal_kind": "competitor_capability",
+        "statement": "Synthetic manufacturer claim: Example Sedan will offer a physical parking control as an option.",
+        "epistemic_status": "publisher_claim",
+        "sentiment": "not_applicable",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:example-sedan"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "public_context": null,
+        "capability": {
+          "availability": "announced",
+          "variant": null,
+          "measurement": null,
+          "notes": [
+            "Synthetic optional offering; not current standard equipment."
+          ]
+        },
+        "extraction_confidence": {
+          "level": "unassessed",
+          "reason": "Illustrative mapping; no calibrated extraction score."
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "evidence:fixture-trend",
+      "entity_key": "evidence:fixture-trend",
+      "type": "Evidence",
+      "label": "Synthetic trend",
+      "revision": 1,
+      "properties": {
+        "evidence_kind": "web_excerpt",
+        "record_key": "trend",
+        "dedup_key": "evidence:fixture-trend",
+        "source_channel": null,
+        "locator": {
+          "kind": "web",
+          "selector": null,
+          "text_fragment": "Synthetic report projection: demand for recognizable controls may continue through 2030."
+        },
+        "raw_text": "Synthetic report projection: demand for recognizable controls may continue through 2030.",
+        "measurement": null,
+        "raw_classifications": [],
+        "context": {
+          "vehicle_model_ids": [],
+          "market_ids": [],
+          "country_codes": [],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": [
+            "Global fixture; applying it to the US and BMW requires an explicit inference."
+          ]
+        },
+        "limitations": [
+          "One record or statistic does not establish population prevalence."
+        ]
+      }
+    },
+    {
+      "id": "signal:fixture-trend",
+      "entity_key": "signal:fixture-trend",
+      "type": "Signal",
+      "label": "Synthetic trend",
+      "revision": 1,
+      "properties": {
+        "signal_kind": "trend_indicator",
+        "statement": "Synthetic report projection: demand for recognizable controls may continue through 2030.",
+        "epistemic_status": "forecast",
+        "sentiment": "not_applicable",
+        "context": {
+          "vehicle_model_ids": [],
+          "market_ids": [],
+          "country_codes": [],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": [
+            "Global fixture; applying it to the US and BMW requires an explicit inference."
+          ]
+        },
+        "public_context": null,
+        "capability": null,
+        "extraction_confidence": {
+          "level": "unassessed",
+          "reason": "Illustrative mapping; no calibrated extraction score."
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "need:fixture-usability",
+      "entity_key": "need:fixture-usability",
+      "type": "CustomerNeed",
+      "label": "Understand how to secure the vehicle",
+      "revision": 1,
+      "properties": {
+        "statement": "Customers need to understand how to secure the vehicle and recognize its parking status.",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "uncertainty": {
+          "level": "high",
+          "reason": "This is a synthetic example.",
+          "limitations": []
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "assumption:fixture-persistence",
+      "entity_key": "assumption:fixture-persistence",
+      "type": "Assumption",
+      "label": "Need persists to successor launch",
+      "revision": 1,
+      "properties": {
+        "statement": "The identified control-usability need remains relevant when the successor launches.",
+        "rationale": "Current feedback motivates a hypothesis about future needs.",
+        "impact_if_false": "The proposal may receive too much priority or need a different implementation.",
+        "validation_plan": "Validate with prospective customers in the target market and compare current external research.",
+        "status": "unvalidated",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "trend:fixture-controls",
+      "entity_key": "trend:fixture-controls",
+      "type": "Trend",
+      "label": "Control usability may remain important",
+      "revision": 1,
+      "properties": {
+        "statement": "Recognizable controls may remain valuable at successor launch.",
+        "trend_kind": "product",
+        "temporal_status": "forecast",
+        "horizon": {
+          "from_year": 2029,
+          "to_year": 2031
+        },
+        "context": {
+          "vehicle_model_ids": [],
+          "market_ids": [],
+          "country_codes": [],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": [
+            "Global fixture; applying it to the US and BMW requires an explicit inference."
+          ]
+        },
+        "uncertainty": {
+          "level": "high",
+          "reason": "The projection is synthetic and unvalidated.",
+          "limitations": []
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "requirement:fixture-parking",
+      "entity_key": "requirement:fixture-parking",
+      "type": "Requirement",
+      "label": "Make parking controls understandable",
+      "revision": 1,
+      "properties": {
+        "statement": "Provide a dedicated physical parking control with unambiguous parking-status feedback.",
+        "customer_value": "Reduce uncertainty and effort when securing the vehicle.",
+        "context": {
+          "vehicle_model_ids": [
+            "vehicle:bmw-g60"
+          ],
+          "market_ids": [
+            "market:US"
+          ],
+          "country_codes": [
+            "US"
+          ],
+          "engine_types": [],
+          "as_of": null,
+          "scope_notes": []
+        },
+        "scope_role": "successor_of_baseline_models",
+        "horizon_years": 4,
+        "target_launch_year": null,
+        "acceptance_criteria": [
+          {
+            "description": "In a usability study, customers can identify the parking control and correctly interpret parking status without assistance. The numerical threshold is a proposed target for review.",
+            "metric": "parking_task_success",
+            "operator": ">=",
+            "target": 0.9,
+            "unit": "proportion",
+            "basis": "proposed_target",
+            "supporting_evidence_ids": []
+          }
+        ],
+        "prioritization_rationale": "Review usability value alongside evidence breadth, target-market relevance, existing features, and competing needs. No automatic ranking has been assigned.",
+        "uncertainty": {
+          "level": "high",
+          "reason": "A small example does not establish broad demand or validate the target.",
+          "limitations": [
+            "No sample representativeness or future preference validation."
+          ]
+        },
+        "provenance": {
+          "actor_type": "human",
+          "actor_id": "ontology-author",
+          "method": "manual_interpretation",
+          "created_at": "2026-10-10T15:47:12Z",
+          "model": null,
+          "prompt_version": null
+        }
+      }
+    },
+    {
+      "id": "decision:fixture-comment",
+      "entity_key": "decision:fixture-comment",
+      "type": "Decision",
+      "label": "Illustrative human review comment",
+      "revision": 1,
+      "properties": {
+        "action": "comment",
+        "actor_type": "human",
+        "actor_id": "fixture-reviewer",
+        "decided_at": "2026-10-10T15:47:12Z",
+        "requirement_revision": 1,
+        "reason": "Synthetic review example: compare the physical-control proposal with the opposing opinion before deciding.",
+        "priority": null
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge:in_source:evidence:fixture-customer:source:fixture-feedback",
+      "type": "IN_SOURCE",
+      "source_id": "evidence:fixture-customer",
+      "target_id": "source:fixture-feedback",
+      "rationale": "Original synthetic fixture excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:derived_from:signal:fixture-customer:evidence:fixture-customer",
+      "type": "DERIVED_FROM",
+      "source_id": "signal:fixture-customer",
+      "target_id": "evidence:fixture-customer",
+      "rationale": "Interpretation of the captured excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:signal:fixture-customer:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "signal:fixture-customer",
+      "target_id": "feature:parking-controls",
+      "rationale": "The excerpt concerns parking controls.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:in_source:evidence:fixture-public-positive:source:fixture-public",
+      "type": "IN_SOURCE",
+      "source_id": "evidence:fixture-public-positive",
+      "target_id": "source:fixture-public",
+      "rationale": "Original synthetic fixture excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:derived_from:signal:fixture-public-positive:evidence:fixture-public-positive",
+      "type": "DERIVED_FROM",
+      "source_id": "signal:fixture-public-positive",
+      "target_id": "evidence:fixture-public-positive",
+      "rationale": "Interpretation of the captured excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:signal:fixture-public-positive:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "signal:fixture-public-positive",
+      "target_id": "feature:parking-controls",
+      "rationale": "The excerpt concerns parking controls.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:in_source:evidence:fixture-public-challenge:source:fixture-public",
+      "type": "IN_SOURCE",
+      "source_id": "evidence:fixture-public-challenge",
+      "target_id": "source:fixture-public",
+      "rationale": "Original synthetic fixture excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:derived_from:signal:fixture-public-challenge:evidence:fixture-public-challenge",
+      "type": "DERIVED_FROM",
+      "source_id": "signal:fixture-public-challenge",
+      "target_id": "evidence:fixture-public-challenge",
+      "rationale": "Interpretation of the captured excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:signal:fixture-public-challenge:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "signal:fixture-public-challenge",
+      "target_id": "feature:parking-controls",
+      "rationale": "The excerpt concerns parking controls.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:in_source:evidence:fixture-competitor:source:fixture-competitor",
+      "type": "IN_SOURCE",
+      "source_id": "evidence:fixture-competitor",
+      "target_id": "source:fixture-competitor",
+      "rationale": "Original synthetic fixture excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:derived_from:signal:fixture-competitor:evidence:fixture-competitor",
+      "type": "DERIVED_FROM",
+      "source_id": "signal:fixture-competitor",
+      "target_id": "evidence:fixture-competitor",
+      "rationale": "Interpretation of the captured excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:signal:fixture-competitor:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "signal:fixture-competitor",
+      "target_id": "feature:parking-controls",
+      "rationale": "The excerpt concerns parking controls.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:in_source:evidence:fixture-trend:source:fixture-trend",
+      "type": "IN_SOURCE",
+      "source_id": "evidence:fixture-trend",
+      "target_id": "source:fixture-trend",
+      "rationale": "Original synthetic fixture excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:derived_from:signal:fixture-trend:evidence:fixture-trend",
+      "type": "DERIVED_FROM",
+      "source_id": "signal:fixture-trend",
+      "target_id": "evidence:fixture-trend",
+      "rationale": "Interpretation of the captured excerpt.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:signal:fixture-trend:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "signal:fixture-trend",
+      "target_id": "feature:parking-controls",
+      "rationale": "The excerpt concerns parking controls.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:supports:signal:fixture-customer:need:fixture-usability",
+      "type": "SUPPORTS",
+      "source_id": "signal:fixture-customer",
+      "target_id": "need:fixture-usability",
+      "rationale": "Confusion motivates an understandable-control outcome.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:supports:signal:fixture-public-positive:need:fixture-usability",
+      "type": "SUPPORTS",
+      "source_id": "signal:fixture-public-positive",
+      "target_id": "need:fixture-usability",
+      "rationale": "One opinion suggests a possible implementation; it does not establish prevalence.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:supports:signal:fixture-competitor:need:fixture-usability",
+      "type": "SUPPORTS",
+      "source_id": "signal:fixture-competitor",
+      "target_id": "need:fixture-usability",
+      "rationale": "The optional competitor claim supplies a comparison, not proof of BMW customer demand.",
+      "context_transfer": "Transfer from a fictional competitor to a BMW need; relevance is an assumption."
+    },
+    {
+      "id": "edge:derived_from:trend:fixture-controls:signal:fixture-trend",
+      "type": "DERIVED_FROM",
+      "source_id": "trend:fixture-controls",
+      "target_id": "signal:fixture-trend",
+      "rationale": "The synthetic forecast supplies a projected indicator.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:depends_on:trend:fixture-controls:assumption:fixture-persistence",
+      "type": "DEPENDS_ON",
+      "source_id": "trend:fixture-controls",
+      "target_id": "assumption:fixture-persistence",
+      "rationale": "Projection depends on preference persistence.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:supports:trend:fixture-controls:need:fixture-usability",
+      "type": "SUPPORTS",
+      "source_id": "trend:fixture-controls",
+      "target_id": "need:fixture-usability",
+      "rationale": "The projection motivates testing future relevance.",
+      "context_transfer": "Global forecast applied to US BMW customers is an unvalidated inference."
+    },
+    {
+      "id": "edge:addresses:requirement:fixture-parking:need:fixture-usability",
+      "type": "ADDRESSES",
+      "source_id": "requirement:fixture-parking",
+      "target_id": "need:fixture-usability",
+      "rationale": "The proposal seeks understandable parking controls.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:justified_by:requirement:fixture-parking:signal:fixture-customer",
+      "type": "JUSTIFIED_BY",
+      "source_id": "requirement:fixture-parking",
+      "target_id": "signal:fixture-customer",
+      "rationale": "Current confusion motivates the proposal.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:justified_by:requirement:fixture-parking:signal:fixture-competitor",
+      "type": "JUSTIFIED_BY",
+      "source_id": "requirement:fixture-parking",
+      "target_id": "signal:fixture-competitor",
+      "rationale": "The optional competitor claim provides a benchmark.",
+      "context_transfer": "Competitor-to-BMW transfer does not establish customer demand."
+    },
+    {
+      "id": "edge:justified_by:requirement:fixture-parking:trend:fixture-controls",
+      "type": "JUSTIFIED_BY",
+      "source_id": "requirement:fixture-parking",
+      "target_id": "trend:fixture-controls",
+      "rationale": "Future relevance is a forecast.",
+      "context_transfer": "Global-to-US forecast transfer requires validation."
+    },
+    {
+      "id": "edge:challenges:signal:fixture-public-challenge:requirement:fixture-parking",
+      "type": "CHALLENGES",
+      "source_id": "signal:fixture-public-challenge",
+      "target_id": "requirement:fixture-parking",
+      "rationale": "An opposing opinion challenges the physical-switch implementation.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:depends_on:requirement:fixture-parking:assumption:fixture-persistence",
+      "type": "DEPENDS_ON",
+      "source_id": "requirement:fixture-parking",
+      "target_id": "assumption:fixture-persistence",
+      "rationale": "Successor relevance depends on future customer needs.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:need:fixture-usability:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "need:fixture-usability",
+      "target_id": "feature:parking-controls",
+      "rationale": "Need concerns control usability.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:concerns:requirement:fixture-parking:feature:parking-controls",
+      "type": "CONCERNS",
+      "source_id": "requirement:fixture-parking",
+      "target_id": "feature:parking-controls",
+      "rationale": "Requirement concerns control usability.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:reviews:decision:fixture-comment:requirement:fixture-parking",
+      "type": "REVIEWS",
+      "source_id": "decision:fixture-comment",
+      "target_id": "requirement:fixture-parking",
+      "rationale": "The fixture shows a comment, not approval.",
+      "context_transfer": null
+    },
+    {
+      "id": "edge:competes_with:vehicle:example-sedan:vehicle:bmw-g60",
+      "type": "COMPETES_WITH",
+      "source_id": "vehicle:example-sedan",
+      "target_id": "vehicle:bmw-g60",
+      "rationale": "Fictional competitive selection for illustrating the schema.",
+      "context_transfer": "Illustrative US segment comparison."
+    }
+  ]
+}

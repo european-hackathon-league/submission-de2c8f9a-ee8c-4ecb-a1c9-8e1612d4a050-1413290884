@@ -1,0 +1,105 @@
+{
+  "ontology_version": "0.1.0",
+  "inspected_input_formats": ["xlsx", "pdf"],
+  "csv_sql_status": "No CSV or populated SQL schema was present during inspection. These mappings use the original headers. A CSV/SQL adapter should preserve them or supply an explicit field map.",
+  "feedback": {
+    "files": ["raw_data/F70_feedback_hackathon.xlsx", "raw_data/G60_feedback_hackathon.xlsx", "raw_data/G70_feedback_hackathon.xlsx"],
+    "sheet": "Feedback_Explorer",
+    "header_row": 1,
+    "original_record_key": ["source_document_version", "ID"],
+    "grouping": "Group rows with the same original ID within the same source version. Verify that source channel, vehicle, country, engine, and feedback text agree. Create one Evidence record and preserve every classification and locator. A conflict requires review; never silently select one text.",
+    "columns": {
+      "ID": "Evidence.record_key; part of its stable identity and dedup_key",
+      "Source": "Evidence.source_channel; anonymized channel label does not establish publisher identity or credibility",
+      "Brand": "VehicleModel.brand; preserve raw bracketed label in the raw SQL layer",
+      "Sales Description": "VehicleModel.vehicle_line; normalize bracketed labels using an explicit alias map",
+      "Country": "Evidence.context.country_codes; market mapping is a separate configured lookup",
+      "Derivate (e-code)": "VehicleModel.generation_code; F70, G60, and G70 are distinct baseline models",
+      "Engine Type": "Evidence.context.engine_types; preserve original value in raw storage",
+      "Feedback Type": "Evidence.raw_classifications[].feedback_type; input to a scoped Signal interpretation",
+      "Customer Feedback": "Evidence.raw_text; immutable original feedback text",
+      "Vfc level2 3 Name": "Evidence.raw_classifications[].vfc_combined",
+      "Vfc level2 Name": "Evidence.raw_classifications[].vfc_level2",
+      "Vfc level3 Name": "Evidence.raw_classifications[].vfc_level3"
+    },
+    "engine_aliases": {"ICE": "ice", "PHEV": "phev", "BEVE": "bev"},
+    "unrecognized_engine": "unknown; retain raw value for later mapping",
+    "feedback_type_interpretation": {
+      "Likes": "Candidate positive experience or benefit to preserve",
+      "Difficult to Use": "Candidate usability issue; not automatically a defect",
+      "Wants": "Candidate customer request; not automatically negative sentiment or high priority",
+      "Defect": "Reported problem; preserve reported-experience status without asserting a verified engineering fault",
+      "null": "Unknown; no sentiment or classification is inferred"
+    },
+    "taxonomy_rules": [
+      "Preserve original VFC strings. no_class_found means no assigned source classification; it is not a canonical Feature.",
+      "Use explicit, reviewable VFC-to-Feature mappings. Canonical domains can extend the four broad briefing domains for digital and ownership experience.",
+      "A multi-aspect record can yield several Signals with different sentiment and features.",
+      "The source feedback classifications and an LLM's new interpretations remain distinguishable through provenance.method."
+    ],
+    "counting_rules": [
+      "Classification-row count is not feedback-record count.",
+      "Feedback-record count is not respondent count; no verified cross-source respondent identity is provided.",
+      "Feedback frequencies describe the provided sample and need a denominator before being reported as a rate."
+    ],
+    "unknown_metadata": ["feedback date", "respondent sampling frame", "cross-source respondent identity", "anonymized source publisher"]
+  },
+  "sales": {
+    "file": "raw_data/sales_volumes.xlsx",
+    "sheets": {"F70": ["F70"], "G60_G68": ["G60", "G68"], "G70": ["G70"]},
+    "columns": ["market", "market_code", "volume_2024", "volume_2025", "volume_2030"],
+    "normalization": "Unpivot year columns to one typed measurement per model-group, market, and year. metric=sales_volume, unit=vehicles, statistic=count.",
+    "market_labels": {"EU": "Europe", "CN": "China", "US": "USA", "RoW": "Rest of World"},
+    "period": "Preserve the source year as period.label. Do not invent precise observation dates.",
+    "temporal_status": "A year after the captured as_of year is source_reported_future unless a forecasting method is supplied; otherwise retain the reported period and provenance. Never classify a future value as historical.",
+    "grouping_rule": "G60_G68 values are a combined source group. Do not duplicate the total for each model or allocate it without supporting data.",
+    "zero_rule": "Preserve explicit zero volumes; do not replace them with null or infer worldwide model availability.",
+    "unknown_metadata": ["forecast methodology", "forecast uncertainty", "model-specific split of grouped G60/G68 values"]
+  },
+  "customer_studies": {
+    "file": "raw_data/F70_G60_G68_G70_customer_studies.xlsx",
+    "sheets": {
+      "CN_EU_2025": {
+        "year": 2025,
+        "column_context": {
+          "B": {"model": "G68", "market": "CN"},
+          "C": {"model": "G70", "market": "CN"},
+          "D": {"model": "F70", "market": "EU"},
+          "E": {"model": "G60", "market": "EU"},
+          "F": {"model": "G70", "market": "EU"}
+        },
+        "layout": "Question labels in column A precede Mean rows. Resolve the original question for each value cell and retain both locators.",
+        "measurement": {"statistic": "mean", "unit": "unknown_rating_scale", "scale": null, "sample_size": null},
+        "rule": "Do not infer scale bounds, convert a mean into sentiment, or compare with US response shares without validated harmonization."
+      },
+      "US_2025": {
+        "year": 2025,
+        "column_context": {"C": {"model": "G60", "market": "US"}, "D": {"model": "G70", "market": "US"}},
+        "layout": "Repeated question blocks with response categories in column A and % of column, sample base in column B. Trim header whitespace but retain the original label.",
+        "measurement": {"statistic": "proportion", "unit": "proportion", "sample_size": null, "denominator": null},
+        "rule": "Values are stored as fractions such as 0.005. Preserve the response category. Sample total=1 is a normalized total, not a respondent count."
+      }
+    },
+    "evidence_identity": "Source version + sheet + question/response category + model/market + value-cell locator.",
+    "unknown_metadata": ["sample counts", "survey method", "sampling frame", "CN/EU scale bounds", "exact EU country coverage"]
+  },
+  "product_catalogs": {
+    "files": {"raw_data/F70_OptionList.PDF": "F70", "raw_data/G60_OptionList.PDF": "G60", "raw_data/G70_OptionList.PDF": "G70"},
+    "source_kind": "product_catalog",
+    "locator": "One-based page and section, with a captured original excerpt; verify column headers, footnotes, and availability symbols visually.",
+    "scope": "The supplied German BMW catalogs provide a market-specific baseline. They do not establish equipment availability in China or the United States.",
+    "extraction_status": "Cover and contents inspected for structure; a complete equipment/availability parser has not been implemented.",
+    "rules": [
+      "Preserve catalog edition date and effective-period labels separately; do not invent a precise effective date from a month label.",
+      "Keep model, variant, package, standard/optional/announced status, and availability footnotes attached to capability claims.",
+      "PDF text alone can lose column and symbol meanings; ambiguous availability requires review.",
+      "An existing feature does not prove a customer's vehicle was equipped with it or that it meets the customer's need."
+    ]
+  },
+  "sql_adapter_contract": {
+    "raw_tables": "Can mirror current CSV/raw columns. The ontology does not mandate table names or a database provider.",
+    "required_preservation": ["original record ID", "source file/version", "original row/cell/page locator", "raw text/value", "raw classifications", "model and country labels"],
+    "derived_layer": "Adapt rows to SourceDocument/Evidence, then persist or expose derived nodes and relationships separately. Do not overwrite raw records with generated summaries.",
+    "identity_alignment": "Agree on stable source, evidence, model, feature, and market IDs before connecting orchestration and frontend. Use an explicit map if SQL identifiers differ."
+  }
+}
