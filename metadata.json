@@ -3,7 +3,7 @@
   "checkpoint_id": "01M4KSSG85EGPF2RCZX3Q7BSB5",
   "strategy": "manual-commit",
   "branch": "chore/tidy-layout",
-  "checkpoints_count": 12,
+  "checkpoints_count": 13,
   "files_touched": [
     "package.json",
     "pnpm-lock.yaml",
@@ -59,13 +59,20 @@
       "compact_transcript": "/6/transcript.jsonl",
       "content_hash": "/6/content_hash.txt",
       "prompt": "/6/prompt.txt"
+    },
+    {
+      "metadata": "/7/metadata.json",
+      "transcript": "/7/full.jsonl",
+      "compact_transcript": "/7/transcript.jsonl",
+      "content_hash": "/7/content_hash.txt",
+      "prompt": "/7/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 196,
-    "cache_creation_tokens": 1645633,
-    "cache_read_tokens": 7636635,
-    "output_tokens": 91729,
-    "api_call_count": 87
+    "input_tokens": 212,
+    "cache_creation_tokens": 1766387,
+    "cache_read_tokens": 8335996,
+    "output_tokens": 95512,
+    "api_call_count": 94
   }
 }

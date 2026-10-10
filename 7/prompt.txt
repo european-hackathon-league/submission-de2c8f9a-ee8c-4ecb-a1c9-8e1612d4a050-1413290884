@@ -1,0 +1,17 @@
+You are writing code (not just researching) in the repo at /Users/itsmeyaw/projects/bmwow (pnpm, TypeScript, Next.js 16, drizzle-orm 1.0.0-rc.4 — a release candidate whose API may differ from your training data; read the .d.ts files under node_modules/drizzle-orm/pg-core/ to confirm every function you use).
+
+Task: create `src/db/schema.ts`, a Drizzle schema that EXACTLY mirrors the hand-written DDL in `migrations/0000_init.sql` (read it first). DDL stays the source of truth for indexes/constraints; do NOT declare indexes or CHECK constraints in Drizzle, and do not use drizzle-kit. Keep the file minimal — no extra abstractions, no comments beyond one header line.
+
+Required exports and TS keys (another agent is writing code against this exact contract in parallel — do not rename anything):
+
+`feedbackEntries` = pgTable("feedback_entries", { id (uuid PK defaultRandom), feedbackExplorerId (text "feedback_explorer_id" notNull unique), source, brand, salesDescription, country, derivateCode, engineType (all nullable text, snake_case db names), rawFeedback (text notNull), embedding (pgvector `vector` with dimensions 1536, nullable, TS type number[]), searchTsv (column "search_tsv", a tsvector — use customType from drizzle-orm/pg-core with dataType "tsvector", and mark it generatedAlwaysAs(sql`to_tsvector('english', raw_feedback)`) so it is excluded from inserts), createdAt (timestamp withTimezone, notNull, defaultNow) })
+
+`feedbackAspects` = pgTable("feedback_aspects", { id (uuid PK defaultRandom), feedbackEntryId (uuid "feedback_entry_id" notNull, references feedbackEntries.id onDelete cascade), feedbackType, aspectTerm, aspectLabelRaw, quoteSnippet (nullable text), vfcCategory, issueType, sentiment, extractionSource (text notNull), sentimentScore (numeric precision 3 scale 2, nullable, default string mode), createdAt (timestamptz notNull defaultNow) })
+
+Also export `type NewFeedbackEntry = typeof feedbackEntries.$inferInsert` and `type NewFeedbackAspect = typeof feedbackAspects.$inferInsert`.
+
+Use explicit snake_case column names in every column builder call so it does not depend on casing config.
+
+Verify: write a throwaway file in /var/folders/zm/8n69b_ld4d17cf77mbq1f0g00000gn/T/opencode (or a temp .ts inside the repo you then delete) that assigns sample objects to NewFeedbackEntry / NewFeedbackAspect, confirming (a) `embedding: number[]` is accepted, (b) `searchTsv` is NOT an allowed insert key (use @ts-expect-error), (c) `sentimentScore: "-0.90"` is accepted. Run `pnpm exec tsc --noEmit -p .` from the repo root (pre-existing unrelated errors in other files may exist; only care about schema.ts and your check file). Delete the throwaway file afterwards. Do not touch any other files.
+
+Return: the final contents of src/db/schema.ts, and the tsc result.
