@@ -3,7 +3,7 @@
   "checkpoint_id": "01M4KVW2JFZSTVW1J91VM8GTW5",
   "strategy": "manual-commit",
   "branch": "chore/worktrees-in-repo",
-  "checkpoints_count": 8,
+  "checkpoints_count": 9,
   "files_touched": [
     ".gitignore"
   ],
@@ -41,6 +41,13 @@
       "transcript": "/4/full.jsonl",
       "compact_transcript": "/4/transcript.jsonl",
       "content_hash": "/4/content_hash.txt",
+      "prompt": ""
+    },
+    {
+      "metadata": "/5/metadata.json",
+      "transcript": "/5/full.jsonl",
+      "compact_transcript": "/5/transcript.jsonl",
+      "content_hash": "/5/content_hash.txt",
       "prompt": ""
     }
   ],
