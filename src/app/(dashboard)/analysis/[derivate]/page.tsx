@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { countryName, int, pct, signed } from "@/lib/format";
+import { countryName, int, mood, pct, signed } from "@/lib/format";
 import {
   getCategoryDetail,
   getEvidence,
@@ -107,7 +107,9 @@ async function CarView({ params, searchParams }: PageProps<"/analysis/[derivate]
         <Kpi label="Feedback" value={int(summary.feedback)} hint={where} />
         <Kpi
           label="Net sentiment"
-          value={signed(summary.net)}
+          value={mood(summary.net).label}
+          valueClass={mood(summary.net).className}
+          sub={signed(summary.net)}
           hint="Mean aspect sentiment, −1 to +1"
         />
         <Kpi
@@ -153,17 +155,29 @@ function Kpi({
   value,
   hint,
   small,
+  sub,
+  valueClass,
 }: {
   label: string;
   value: string;
   hint?: string;
   small?: boolean;
+  /** Secondary figure shown small after the value. */
+  sub?: string;
+  valueClass?: string;
 }) {
   return (
     <Card>
       <CardHeader>
         <CardDescription>{label}</CardDescription>
-        <CardTitle className={small ? "text-lg" : "text-3xl tabular-nums"}>{value}</CardTitle>
+        <CardTitle
+          className={`flex flex-wrap items-baseline gap-x-2 ${small ? "text-lg" : "text-3xl tabular-nums"}`}
+        >
+          <span className={`${small ? "" : "whitespace-nowrap"} ${valueClass ?? ""}`}>{value}</span>
+          {sub && (
+            <span className="text-sm font-normal text-muted-foreground tabular-nums">{sub}</span>
+          )}
+        </CardTitle>
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </CardHeader>
     </Card>
