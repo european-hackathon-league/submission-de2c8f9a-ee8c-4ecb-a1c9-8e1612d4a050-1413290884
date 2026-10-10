@@ -150,8 +150,6 @@ _UNITS = [
     ("mm", r"(\d[\d,.]*)\s*mm"),
     ("percent", r"(\d[\d,.]*)\s*percent"),
 ]
-_POSITIVE = ["precise", "fun", "best", "superb", "loves", "sharp", "quickly"]
-_DEMAND = ["wish", "need", "should", "please", "expect", "demand", "increasingly"]
 
 
 def _attribute(text: str) -> str:
@@ -160,15 +158,6 @@ def _attribute(text: str) -> str:
         if any(k in low for k in kws):
             return attr
     return "unmapped:other"
-
-
-def _polarity(text: str) -> str:
-    low = text.lower()
-    if any(w in low for w in _DEMAND):
-        return "demand"
-    if any(w in low for w in _POSITIVE):
-        return "positive"
-    return "negative"
 
 
 def _call(name: str, args: dict[str, Any], i: int = 0) -> AIMessage:
@@ -238,8 +227,8 @@ class FakeAnalyst:
         self.prompts.append(prompt)
         if "PositioningOutput" in tools:
             return self._positioning(prompt)
-        if "ClusterLabel" in tools:
-            return self._label(prompt)
+        if "SubThemeOutput" in tools:
+            return self._sub_themes(prompt)
         if "ExplainOutput" in tools:
             return self._explain(prompt)
         if "DraftFindings" in tools:
@@ -263,20 +252,20 @@ class FakeAnalyst:
         ]
         return _call("PositioningOutput", {"findings": findings})
 
-    def _label(self, prompt: str) -> AIMessage:
-        texts = re.findall(r"^\[T(\d+)\] (.+)$", prompt, flags=re.M)
-        joined = " ".join(t for _, t in texts)
-        attr = _attribute(joined)
-        return _call(
-            "ClusterLabel",
-            {
-                "attribute": attr,
-                "polarity": _polarity(joined),
-                "claim": f"Customers comment on {attr.replace('_', ' ')}.",
-                "source_keys": [f"T{i}" for i, _ in texts[:3]],
-                "confidence": "high",
-            },
-        )
+    def _sub_themes(self, prompt: str) -> AIMessage:
+        texts = re.findall(r"^\[(T\d+)\] (.+)$", prompt, flags=re.M)
+        topics = {
+            "Rear legroom for passengers 2": ["legroom", "rear", "back seat", "knee", "cramped"],
+            "Seat ventilation in summer": ["ventilat", "cool", "sweaty"],
+        }
+        groups = []
+        for name, words in topics.items():
+            keys = [k for k, t in texts if any(w in t.lower() for w in words)]
+            if keys:
+                groups.append({"name": name, "keys": keys + ["T999"]})  # T999 must be dropped
+        if texts:
+            groups.append({"name": "Single text", "keys": [texts[0][0]]})  # < 2 keys: dropped
+        return _call("SubThemeOutput", {"groups": groups})
 
     def _competition(self, messages: list[BaseMessage], prompt: str) -> AIMessage:
         name = re.search(r"# Competitor\n\n(.+)", prompt)

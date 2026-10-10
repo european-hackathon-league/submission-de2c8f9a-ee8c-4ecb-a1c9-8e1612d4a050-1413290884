@@ -58,6 +58,30 @@ class Quantity(BaseModel):
     origin: Literal["record", "computed", "source_text"] = "source_text"
 
 
+Direction = Literal["problem", "request", "strength", "neutral"]
+
+
+class RegionTest(BaseModel):
+    """Two-proportion z-test of one region's share against the other requested regions combined."""
+
+    other: str  # e.g. "US" or "US+RoW"
+    other_k: int
+    other_n: int
+    p_value: float
+
+
+class FindingStats(BaseModel):
+    """How certain a computed share is. Set by code only."""
+
+    k: int  # items with the observation
+    n: int  # items in the denominator
+    denominator_label: str  # e.g. "BEV+PHEV feedback items, EU"
+    ci_low: float  # Wilson 95% interval of k / n
+    ci_high: float
+    thin: bool  # small sample: n or k below the thresholds in rules.yaml
+    region_test: RegionTest | None = None
+
+
 class Finding(BaseModel):
     id: str  # "F-<agent>-<n>", assigned by code, never by the LLM
     agent: AgentName
@@ -69,6 +93,43 @@ class Finding(BaseModel):
     source_ids: list[str]  # >= 1, must resolve to Sources in the same report
     confidence: Confidence
     weight: float = 1.0  # set by code only (e.g. share of feedback items)
+    # Optional additions (set by code): the region a finding is about (None = all requested regions),
+    # its direction from the customer's view, statistics for computed shares, a trend's horizon and
+    # the number of independent sources behind it.
+    region: str | None = None
+    direction: Direction | None = None
+    stats: FindingStats | None = None
+    horizon: Literal["now", "1-2y", "3y+"] | None = None
+    n_independent_sources: int | None = None
+
+
+class Availability(BaseModel):
+    """Whether a data source could be used in this run; missing data is reported, not hidden."""
+
+    source: str  # e.g. "feedback", "feedback:CN", "sales", "studies", "web"
+    status: Literal["ok", "partial", "unavailable"]
+    reason: str = ""
+
+
+class SubTheme(BaseModel):
+    """What exactly customers mean within one feature and direction."""
+
+    attribute: str
+    direction: Direction
+    name: str
+    k: int  # items in this sub-theme (method="llm": within the sample)
+    of: int  # items of the feature and direction (method="llm": sample size)
+    method: Literal["aspect_term", "llm"]
+    source_ids: list[str]  # representative feedback items
+
+
+class CandidateFeature(BaseModel):
+    """A recurring topic that maps to no known feature: an open signal for review."""
+
+    name: str
+    k: int
+    n: int
+    source_ids: list[str]
 
 
 class AgentReport(BaseModel):
@@ -79,6 +140,10 @@ class AgentReport(BaseModel):
     summary: str = ""  # <= 120 words, for the UI
     stats: dict[str, float | int] = Field(default_factory=dict)
     errors: list[str] = Field(default_factory=list)
+    # Optional additions: data availability, sub-themes and open signals (feedback).
+    availability: list[Availability] = Field(default_factory=list)
+    sub_themes: list[SubTheme] = Field(default_factory=list)
+    candidates: list[CandidateFeature] = Field(default_factory=list)
 
 
 class AnalysisRequest(BaseModel):

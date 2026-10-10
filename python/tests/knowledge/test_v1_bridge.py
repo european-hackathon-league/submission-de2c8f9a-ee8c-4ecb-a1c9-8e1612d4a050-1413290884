@@ -12,11 +12,10 @@ from bmwow.agent.sources import attribute_source, doc_source, feedback_source
 from bmwow.agent.supervisor import build_graph
 from bmwow.agent.taxonomy import Taxonomy
 from bmwow.agent.tools import graph_rag, sql_rag
-from bmwow.agent.tools.feedback_stats import analyze_feedback, exact_dedupe
+from bmwow.agent.tools.feedback_stats import exact_dedupe
 from bmwow.agent.tools.knowledge import ModuleBackend
 from bmwow.knowledge import AttributeValue, FeedbackFilter
 from bmwow.ontology import validate_bundle
-from tests.fakes.llm import HashEmbeddings
 
 
 def test_legacy_imports_reexport_one_record_definition():
@@ -88,9 +87,7 @@ async def test_identical_comments_from_distinct_records_remain_distinct(bridge):
     another.references[0].record_key = "other-comment"
     another.references[0].locator.range = "A3"
     assert len(exact_dedupe([original, original.model_copy(deep=True), another])) == 2
-    result = await analyze_feedback([original, another], HashEmbeddings())
-    assert result.n_items == result.n_after_dedupe == 2
-    assert len(result.clusters) == 1 and result.share(result.clusters[0]) == 1
+    assert len(exact_dedupe([original, another])) == 2
 
 
 async def test_resolver_uses_curated_competitor_regions(bridge):
