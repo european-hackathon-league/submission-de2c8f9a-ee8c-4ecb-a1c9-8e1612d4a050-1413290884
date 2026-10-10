@@ -49,6 +49,10 @@ The checks are `pnpm lint`, `pnpm fmt:check`, and `pnpm build`, plus the Python
 checks listed in [`python/README.md`](python/README.md). Agents and contributors
 work in git worktrees; see [AGENTS.md](AGENTS.md).
 
+To inspect SQL feedback across EU member countries, add `--region EU` to the
+inspection command in the [Python setup guide](python/README.md). Direct country
+filters remain available, and each feedback keeps its original country.
+
 ## Docs
 
 - [Project plan](docs/project-plan.md): the milestone, team boundaries, Neon, and the BMW data boundary.
