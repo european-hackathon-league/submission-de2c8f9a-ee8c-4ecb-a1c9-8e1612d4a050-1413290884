@@ -1,0 +1,11 @@
+Research only, do not write code. Thoroughness: medium. Repo: /Users/itsmeyaw/projects/bmwow.
+
+Report back concisely:
+1. Contents of CONTEXT.md (full terminology list) and any ADRs/docs (docs/, adr/, *.md besides node_modules).
+2. Tech stack: package.json deps (Next.js version, React, shadcn/ui presence via components.json, tailwind, chart libs like recharts, AI SDK, DB clients like Neon/drizzle/prisma, auth).
+3. App structure: app/ routes that exist, layouts, existing components (esp. components/ui shadcn components installed, sidebar, breadcrumb, chart).
+4. Data layer: how customer feedback analysis, competitor research, trend research data is produced/stored. Any DB schema (drizzle/prisma/sql files), types, seed/mock data, API routes, pipelines/agents. Field names for things like car models (G60, G70, F60), regions/countries, aspects, sentiment, priority scores, "incentives", citations/sources.
+5. Any existing chat implementation (AI SDK, useChat, API route) and what it's backed by.
+6. Any auth/user info (name/email shown in sidebar footer).
+7. Git log --oneline -15 and current branch.
+Include file paths for everything.
