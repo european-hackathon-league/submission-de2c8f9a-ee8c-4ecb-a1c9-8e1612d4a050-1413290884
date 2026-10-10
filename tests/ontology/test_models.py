@@ -66,6 +66,7 @@ def test_generated_contract_is_valid_and_current(bundle):
         "naive_timestamp",
         "invalid_calendar_date",
         "unknown_node_type",
+        "blank_explanation",
     ],
 )
 def test_structural_failures_agree_in_python_and_json_schema(bundle, case):
@@ -107,6 +108,8 @@ def test_structural_failures_agree_in_python_and_json_schema(bundle, case):
             bundle["as_of"] = "2026-02-30"
         case "unknown_node_type":
             customer["type"] = "Opinion"
+        case "blank_explanation":
+            bundle["edges"][0]["rationale"] = " \n\t "
 
     with pytest.raises(ValidationError):
         GraphBundle.model_validate_json(json.dumps(bundle))

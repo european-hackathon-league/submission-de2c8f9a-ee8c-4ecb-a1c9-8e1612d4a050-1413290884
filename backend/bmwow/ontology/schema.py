@@ -6,8 +6,18 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import get_args
 
-from .models import ONTOLOGY_VERSION, Domain, GraphBundle, Node, RelationshipType
+from .models import (
+    ONTOLOGY_VERSION,
+    Domain,
+    GraphBundle,
+    Node,
+    NodeType,
+    RelationshipType,
+    SignalKind,
+    SignalPayload,
+)
 from .relationships import RELATIONSHIPS
+from .tools import build_agent_contracts
 
 
 def build_schema() -> dict:
@@ -32,6 +42,16 @@ def build_vocabulary() -> dict:
         for model in node_models
     }
     known_nodes = set(node_types)
+    if known_nodes != set(get_args(NodeType)):
+        raise RuntimeError("Model and query object type names disagree")
+    signal_models = get_args(get_args(SignalPayload)[0])
+    known_signals = {
+        kind
+        for model in signal_models
+        for kind in get_args(model.model_fields["signal_kind"].annotation)
+    }
+    if known_signals != set(get_args(SignalKind)):
+        raise RuntimeError("Model and query signal kind names disagree")
     for rule in RELATIONSHIPS.values():
         if not set(rule.source_types + rule.target_types) <= known_nodes:
             raise RuntimeError("Relationship rule references an unknown node type")
@@ -40,6 +60,7 @@ def build_vocabulary() -> dict:
         "node_types": node_types,
         "relationships": {name: asdict(rule) for name, rule in RELATIONSHIPS.items()},
         "domains": list(get_args(Domain)),
+        "signal_kinds": list(get_args(SignalKind)),
         "scope_authority": (
             "properties.context is authoritative; do not separately maintain conflicting ABOUT edges."
         ),
@@ -47,6 +68,24 @@ def build_vocabulary() -> dict:
             "Derived from human Decision events for the exact Requirement id and revision. "
             "A new revision starts unreviewed."
         ),
+        "link_traversal": (
+            "Store each canonical edge once. Traverse incoming and outgoing sides; "
+            "inverse_name is a display/API label, not a separately stored relationship type."
+        ),
+        "actions": {
+            "propose_requirement": {
+                "input": "RequirementProposal",
+                "function": "bmwow.ontology.validate_proposal",
+                "effect": "Returns a validated candidate snapshot; leaves the base unchanged.",
+                "actor": "software; service binds identity and checks authorization",
+            },
+            "review_requirement": {
+                "input": "Decision + REVIEWS",
+                "function": "bmwow.ontology.validate_bundle on a merged snapshot",
+                "effect": "Records a human decision for one exact requirement revision.",
+                "actor": "authenticated human; not available in the agent proposal interface",
+            },
+        },
         "storage": (
             "SQL tables, join tables, or a NetworkX MultiDiGraph can represent the same contract. "
             "No storage engine is required by this ontology."
@@ -60,6 +99,7 @@ def render_contracts() -> dict[str, str]:
         for name, value in {
             "schema.json": build_schema(),
             "vocabulary.json": build_vocabulary(),
+            "agent-contracts.json": build_agent_contracts(),
         }.items()
     }
 

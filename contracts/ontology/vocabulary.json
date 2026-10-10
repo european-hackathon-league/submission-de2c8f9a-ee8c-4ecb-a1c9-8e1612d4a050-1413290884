@@ -1,5 +1,5 @@
 {
-  "ontology_version": "0.1.0",
+  "ontology_version": "0.2.0",
   "node_types": {
     "SourceDocument": {
       "description": "A specific file, SQL source, or captured web page; records origin, retrieval date, and independence."
@@ -13,11 +13,14 @@
     "Feature": {
       "description": "A canonical capability or experience; VFC labels are source annotations and aliases."
     },
+    "CatalogItem": {
+      "description": "An option or package within one catalog edition; availability is an evidenced capability claim."
+    },
     "Evidence": {
       "description": "An original record, excerpt, or statistic with a source locator. Repeated classification rows remain one feedback record."
     },
     "Signal": {
-      "description": "One scoped interpretation of evidence: customer experience, public opinion, competitor capability, or trend indicator."
+      "description": "One scoped interpretation: experience, sentiment, capability, study finding, commercial indicator or trend."
     },
     "CustomerNeed": {
       "description": "A customer outcome synthesized from supporting and challenging signals."
@@ -43,30 +46,35 @@
       "target_types": [
         "SourceDocument"
       ],
-      "description": "Locates original evidence in its captured source."
+      "description": "Locates original evidence in its captured source.",
+      "inverse_name": "HAS_EVIDENCE"
     },
     "DERIVED_FROM": {
       "source_types": [
         "Signal",
-        "Trend"
+        "Trend",
+        "CatalogItem"
       ],
       "target_types": [
         "Evidence",
         "Signal"
       ],
-      "description": "Traces an interpretation or trend to its inputs. Signals derive directly from Evidence."
+      "description": "Traces an interpretation, catalog item or trend to inputs. Signals and items use Evidence.",
+      "inverse_name": "DERIVATIONS"
     },
     "CONCERNS": {
       "source_types": [
         "Signal",
         "CustomerNeed",
         "Trend",
-        "Requirement"
+        "Requirement",
+        "CatalogItem"
       ],
       "target_types": [
         "Feature"
       ],
-      "description": "Associates an interpretation or proposal with a canonical feature."
+      "description": "Associates an interpretation or proposal with a canonical feature.",
+      "inverse_name": "SUBJECT_OF"
     },
     "SUPPORTS": {
       "source_types": [
@@ -78,7 +86,8 @@
         "Requirement",
         "Assumption"
       ],
-      "description": "Provides supporting evidence, with an explicit rationale and scope-transfer explanation."
+      "description": "Provides supporting evidence, with an explicit rationale and scope-transfer explanation.",
+      "inverse_name": "SUPPORTED_BY"
     },
     "CHALLENGES": {
       "source_types": [
@@ -90,7 +99,8 @@
         "Requirement",
         "Assumption"
       ],
-      "description": "Provides opposing or limiting evidence; sentiment alone does not determine this relationship."
+      "description": "Provides opposing or limiting evidence; sentiment alone does not determine this relationship.",
+      "inverse_name": "CHALLENGED_BY"
     },
     "ADDRESSES": {
       "source_types": [
@@ -99,7 +109,8 @@
       "target_types": [
         "CustomerNeed"
       ],
-      "description": "States the customer outcome a requirement is intended to deliver."
+      "description": "States the customer outcome a requirement is intended to deliver.",
+      "inverse_name": "ADDRESSED_BY"
     },
     "JUSTIFIED_BY": {
       "source_types": [
@@ -109,7 +120,8 @@
         "Signal",
         "Trend"
       ],
-      "description": "Provides the evidence chain and rationale for a proposed requirement."
+      "description": "Provides the evidence chain and rationale for a proposed requirement.",
+      "inverse_name": "JUSTIFIES"
     },
     "DEPENDS_ON": {
       "source_types": [
@@ -120,7 +132,8 @@
       "target_types": [
         "Assumption"
       ],
-      "description": "Makes a forward-looking or inferential premise explicit."
+      "description": "Makes a forward-looking or inferential premise explicit.",
+      "inverse_name": "PREMISE_FOR"
     },
     "REVIEWS": {
       "source_types": [
@@ -129,7 +142,8 @@
       "target_types": [
         "Requirement"
       ],
-      "description": "Targets one requirement revision without mutating the proposal or source evidence."
+      "description": "Targets one requirement revision without mutating the proposal or source evidence.",
+      "inverse_name": "REVIEWED_BY"
     },
     "COMPETES_WITH": {
       "source_types": [
@@ -138,7 +152,8 @@
       "target_types": [
         "VehicleModel"
       ],
-      "description": "A scoped competitive comparison chosen for a market and segment, not assumed from brand alone."
+      "description": "A scoped competitive comparison chosen for a market and segment, not assumed from brand alone.",
+      "inverse_name": "COMPETITOR_OF"
     },
     "SUPERSEDES": {
       "source_types": [
@@ -146,16 +161,59 @@
         "CustomerNeed",
         "Trend",
         "Assumption",
-        "Requirement"
+        "Requirement",
+        "CatalogItem"
       ],
       "target_types": [
         "Signal",
         "CustomerNeed",
         "Trend",
         "Assumption",
+        "Requirement",
+        "CatalogItem"
+      ],
+      "description": "Links a newer revision to an older revision of the same entity type.",
+      "inverse_name": "SUPERSEDED_BY"
+    },
+    "DESCRIBES": {
+      "source_types": [
+        "Signal"
+      ],
+      "target_types": [
+        "CatalogItem"
+      ],
+      "description": "Connects one product or competitor capability claim to its catalog-edition item.",
+      "inverse_name": "DESCRIBED_BY"
+    },
+    "INCLUDES": {
+      "source_types": [
+        "CatalogItem"
+      ],
+      "target_types": [
+        "CatalogItem"
+      ],
+      "description": "A package includes an item within the same source edition; not an availability assertion.",
+      "inverse_name": "INCLUDED_IN"
+    },
+    "BASELINED_ON": {
+      "source_types": [
         "Requirement"
       ],
-      "description": "Links a newer revision to an older revision of the same entity type."
+      "target_types": [
+        "Signal"
+      ],
+      "description": "References an evidenced BMW product capability for the proposed change intent.",
+      "inverse_name": "BASELINE_FOR"
+    },
+    "IS_VARIANT_OF": {
+      "source_types": [
+        "VehicleModel"
+      ],
+      "target_types": [
+        "VehicleModel"
+      ],
+      "description": "Identifies an explicit variant's model generation; does not propagate equipment availability.",
+      "inverse_name": "HAS_VARIANT"
     }
   },
   "domains": [
@@ -168,7 +226,31 @@
     "cross_domain",
     "unknown"
   ],
+  "signal_kinds": [
+    "customer_feedback",
+    "public_sentiment",
+    "competitor_capability",
+    "product_capability",
+    "study_finding",
+    "commercial_indicator",
+    "trend_indicator"
+  ],
   "scope_authority": "properties.context is authoritative; do not separately maintain conflicting ABOUT edges.",
   "review_state": "Derived from human Decision events for the exact Requirement id and revision. A new revision starts unreviewed.",
+  "link_traversal": "Store each canonical edge once. Traverse incoming and outgoing sides; inverse_name is a display/API label, not a separately stored relationship type.",
+  "actions": {
+    "propose_requirement": {
+      "input": "RequirementProposal",
+      "function": "bmwow.ontology.validate_proposal",
+      "effect": "Returns a validated candidate snapshot; leaves the base unchanged.",
+      "actor": "software; service binds identity and checks authorization"
+    },
+    "review_requirement": {
+      "input": "Decision + REVIEWS",
+      "function": "bmwow.ontology.validate_bundle on a merged snapshot",
+      "effect": "Records a human decision for one exact requirement revision.",
+      "actor": "authenticated human; not available in the agent proposal interface"
+    }
+  },
   "storage": "SQL tables, join tables, or a NetworkX MultiDiGraph can represent the same contract. No storage engine is required by this ontology."
 }

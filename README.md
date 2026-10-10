@@ -39,10 +39,12 @@ backend/bmwow/                Importable Python package; future backend modules 
   ontology/models.py          Canonical Pydantic models and field constraints
   ontology/relationships.py   Canonical relationship endpoints and descriptions
   ontology/validation.py      Structure and graph-wide rules; validation CLI
+  ontology/tools.py           Typed queries, tracing, comparison checks and proposals
   ontology/schema.py          Generates and checks portable JSON contracts
 contracts/ontology/           Shared JSON artifacts for frontend, agents, and data adapters
   schema.json                 Generated JSON Schema; do not edit manually
   vocabulary.json             Generated vocabulary; do not edit manually
+  agent-contracts.json         Generated agent-tool input/output schemas
   source-mappings.json         Curated mappings from supplied raw columns
   examples/synthetic.json     Shareable integration fixture, with invented evidence
 docs/ontology.md              Ontology meaning, design factors, and integration guidance
@@ -59,17 +61,30 @@ guides in `docs/`, and tests in `tests/`. The source package sits outside the re
 root, following the import isolation described by the
 [Python Packaging Guide](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/).
 
+`backend/` is the Python source directory; `bmwow/` is the installed package
+namespace. Keep both so imports such as `from bmwow.ontology import GraphBundle`
+work consistently in tests, scripts, and future services. The wheel configuration
+in `pyproject.toml` installs `backend/bmwow/`. Future LangChain agents and workflows
+belong in `backend/bmwow/agents/`; `ontology/tools.py` contains deterministic domain
+operations that those agents can call. Create the agents module when implementing
+orchestration.
+
 There is one ontology definition. Pydantic models and Python relationship rules
-generate `contracts/ontology/schema.json` and `contracts/ontology/vocabulary.json`.
+generate `contracts/ontology/schema.json`, `contracts/ontology/vocabulary.json`,
+and `contracts/ontology/agent-contracts.json`.
 `source-mappings.json` is a hand-maintained input mapping contract, and the synthetic
 example is a hand-maintained integration fixture. The generator updates only the
-two generated files. Guides explain the contract without defining another schema.
+three generated files. Guides explain the contract without defining another schema.
 
 ## Using the Python ontology
 
 Pydantic is the schema authoring source of truth. JSON stays the interchange format
-for the frontend, SQL adapters, and agent tools. The existing v0.1.0 wire payloads
-and graph rules are retained; this change does not add ontology concepts.
+for the frontend, SQL adapters, and agent tools. **Version 0.2.0 is a breaking wire
+extension**: catalog item identities, scoped capability claims, ranges and test
+conditions, study/sales signal kinds, requirement change intent and baselines, and
+criterion verification fields. Python import paths and existing fixture IDs remain
+stable. Coordinate adapters and consumers using the
+[migration guide](docs/ontology.md#migrating-v010-consumers-and-local-samples).
 
 ```python
 from pathlib import Path
@@ -128,11 +143,9 @@ The default output directory is `contracts/ontology`, relative to the current di
 These commands can be used in CI. Export elsewhere with
 `uv run bmwow-schema --output-dir <directory>`.
 
-If present, validate the local BMW sample with:
-
-```sh
-uv run bmwow-validate raw_data/ontology_examples/feedback-and-sales.json
-```
+The ignored `raw_data/ontology_examples/feedback-and-sales.json` is a legacy v0.1.0
+BMW sample. It has not been silently rewritten or deleted. Follow the migration
+guide before validating it with the v0.2.0 CLI; changing the version alone is insufficient.
 
 Keep original BMW data and derived samples in ignored `raw_data/`. Tracked fixtures
 use synthetic content and serve integration, not research evidence.
@@ -146,9 +159,16 @@ applicable installed Next.js guide as directed by `AGENTS.md` before frontend ch
   See [ontology guide](docs/ontology.md) for entity meaning, limits, IDs, and revisions.
 - **Agent orchestration:** use typed models for tool payloads and proposals; run
   graph validation before accepting results. Preserve original Evidence and
-  source locators. Orchestration is not implemented here.
+  source locators. Deterministic helpers in `backend/bmwow/ontology/tools.py` support
+  scoped query, incoming/outgoing traversal, evidence trace, requirement context,
+  comparison readiness, and non-mutating proposal validation. Their schemas are in
+  `agent-contracts.json`; see the ontology guide for signatures and limits. Wrap
+  these in LangChain tools using injected runtime graph access. Orchestration,
+  persistence, authentication, and concurrent-write control remain service work.
 - **Frontend:** use generated JSON contracts and the synthetic fixture for requirement
-  and evidence views. No TypeScript generator or API endpoint has been selected yet.
+  and evidence views, including change intent, baseline claims, package conditions,
+  test conditions, opposing evidence, and revision-specific decisions. No TypeScript
+  generator or API endpoint has been selected yet.
 - **SQL/data:** raw tables can retain the supplied column layout. Map them through
   adapters into Evidence and related nodes; the ontology is not the required raw
   SQL table design. See [source mappings](contracts/ontology/source-mappings.json).
@@ -156,9 +176,13 @@ applicable installed Next.js guide as directed by `AGENTS.md` before frontend ch
   evidence contract. See [collection guidance](docs/web-research.md).
   No scraper has been implemented yet.
 
-The next discussion will revisit useful questions, granularity, scope and time,
-provenance, evidence quality, comparability, disagreements, and human review.
-This change establishes shared tooling and the Pydantic contract first.
+The [implementation plan](docs/ontology-plan.md) records the design decisions and
+acceptance questions. The ontology follows business-object and validated-change
+principles from Palantir while retaining source evidence and uncertainty explicitly.
+The tracked fixture exercises feedback, public opinions, competitor/trend claims,
+BMW baseline and package identities, conditional charging, an interval, study
+statistics, combined-model future sales, and opposing evidence. Every claim and
+number in that fixture is invented; it does not establish a BMW product fact.
 
 ## Layout migration
 
