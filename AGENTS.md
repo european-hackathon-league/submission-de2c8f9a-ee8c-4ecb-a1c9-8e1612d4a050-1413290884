@@ -1,3 +1,7 @@
+## Notes
+
+- See CONTEXT.md to see terminology used in the project.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
