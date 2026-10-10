@@ -1,4 +1,4 @@
-"""Canonical Pydantic models for the existing v0.1.0 JSON interchange contract.
+"""Canonical Pydantic models for the v0.2.0 product decision ontology.
 
 All nullable fields remain required: an explicit null records missing information.
 Use model_validate_json for wire payloads so strict dates accept ISO JSON strings.
@@ -18,10 +18,10 @@ from pydantic import (
 )
 from rfc3986_validator import validate_rfc3986
 
-OntologyVersion = Literal["0.1.0"]
+OntologyVersion = Literal["0.2.0"]
 ONTOLOGY_VERSION = get_args(OntologyVersion)[0]
 
-Text = Annotated[str, StringConstraints(min_length=1)]
+Text = Annotated[str, StringConstraints(min_length=1, pattern=r"\S")]
 Id = Annotated[Text, StringConstraints(pattern=r"^[a-z][a-z0-9_-]*:[^\s]+$")]
 CountryCode = Annotated[Text, StringConstraints(pattern=r"^[A-Z]{2}$")]
 PartialDate = Annotated[Text, StringConstraints(pattern=r"^\d{4}(?:-\d{2}(?:-\d{2})?)?$")]
@@ -41,6 +41,15 @@ Domain = Literal[
     "unknown",
 ]
 EngineType = Literal["ice", "phev", "bev", "unknown"]
+SignalKind = Literal[
+    "customer_feedback",
+    "public_sentiment",
+    "competitor_capability",
+    "product_capability",
+    "study_finding",
+    "commercial_indicator",
+    "trend_indicator",
+]
 ConfidenceLevel = Literal["low", "medium", "high", "unassessed"]
 RelationshipType = Literal[
     "IN_SOURCE",
@@ -54,6 +63,24 @@ RelationshipType = Literal[
     "REVIEWS",
     "COMPETES_WITH",
     "SUPERSEDES",
+    "DESCRIBES",
+    "INCLUDES",
+    "BASELINED_ON",
+    "IS_VARIANT_OF",
+]
+NodeType = Literal[
+    "SourceDocument",
+    "VehicleModel",
+    "Market",
+    "Feature",
+    "CatalogItem",
+    "Evidence",
+    "Signal",
+    "CustomerNeed",
+    "Trend",
+    "Assumption",
+    "Requirement",
+    "Decision",
 ]
 
 T = TypeVar("T")
@@ -90,8 +117,10 @@ class ContractModel(BaseModel):
 
 
 class Context(ContractModel):
-    vehicle_model_ids: UniqueList[Id]
-    market_ids: UniqueList[Id]
+    """Explicit observation scope; empty lists mean unknown, never universal coverage."""
+
+    vehicle_model_ids: UniqueList[Id] = Field(description="Exact known model or variant IDs.")
+    market_ids: UniqueList[Id] = Field(description="Configured market IDs; no inferred membership.")
     country_codes: UniqueList[CountryCode]
     engine_types: UniqueList[EngineType]
     as_of: date | None
@@ -130,9 +159,21 @@ class Scale(ContractModel):
     maximum: float
 
 
+class NumericRange(ContractModel):
+    """A source-reported interval; configuration alternatives remain separate observations."""
+
+    minimum: float
+    maximum: float
+
+
 class Measurement(ContractModel):
+    """Original scalar or interval with conditions needed for meaningful comparisons."""
+
     metric: Text
-    value: float
+    value: float | None = Field(description="Scalar only; null when value_range is populated.")
+    value_range: NumericRange | None = Field(
+        description="Genuine interval only; null for a scalar. Never compute a midpoint."
+    )
     unit: Text
     statistic: Literal["count", "mean", "proportion", "percent", "index", "scalar"]
     temporal_status: Literal["historical", "source_reported_future", "forecast", "unknown"]
@@ -142,6 +183,16 @@ class Measurement(ContractModel):
     scale: Scale | None
     comparison_basis: Text | None
     population: Text | None
+    test_standard: Text | None = Field(
+        description="Original procedure, e.g. WLTP; null if unknown."
+    )
+    conditions: list[Text] = Field(
+        description="Configuration, environment and footnote constraints."
+    )
+    question: Text | None = Field(description="Original survey question, when applicable.")
+    response_category: Text | None = Field(
+        description="Original response label; no scale conversion."
+    )
     notes: list[Text]
 
 
@@ -198,14 +249,31 @@ class PublicContext(ContractModel):
     sampling_notes: Annotated[list[Text], Field(min_length=1)]
 
 
+class AvailabilityCondition(ContractModel):
+    """Inspectable constraints; all/any semantics must not be flattened into unconditional links."""
+
+    kind: Literal["requires_all", "requires_any", "excludes", "configuration", "usage", "unknown"]
+    catalog_item_ids: UniqueList[Id] = Field(
+        description="Item references for requires_all/requires_any/excludes; empty for other kinds."
+    )
+    description: Text = Field(description="Preserve the condition and original unresolved details.")
+
+
 class Capability(ContractModel):
-    availability: Literal["announced", "standard", "optional", "available_unspecified", "unknown"]
+    """One evidenced offering or performance claim; identity and customer demand are separate."""
+
+    availability: Literal[
+        "announced", "standard", "optional", "available_unspecified", "unavailable", "unknown"
+    ]
     variant: Text | None
     measurement: Measurement | None
+    conditions: list[AvailabilityCondition]
     notes: list[Text]
 
 
 class Criterion(ContractModel):
+    """A customer acceptance test; unknown thresholds remain explicit rather than fabricated."""
+
     description: Text
     metric: Text | None
     operator: Literal[">=", "<=", "=", ">", "<"] | None
@@ -213,6 +281,10 @@ class Criterion(ContractModel):
     unit: Text | None
     basis: Literal["proposed_target", "evidence_supported_target", "human_set_target"]
     supporting_evidence_ids: UniqueList[Id]
+    verification_method: Literal[
+        "user_study", "benchmark_test", "inspection", "analysis", "to_be_defined"
+    ]
+    test_conditions: list[Text]
 
 
 class LocalFileLocation(ContractModel):
@@ -282,6 +354,16 @@ class FeatureProperties(ContractModel):
     aliases: UniqueList[Text]
 
 
+class CatalogItemProperties(ContractModel):
+    item_kind: Literal["equipment", "package"]
+    equipment_code: Text | None
+    description: Text
+    context: Context
+    conditions: list[AvailabilityCondition]
+    notes: list[Text]
+    provenance: Provenance
+
+
 class EvidenceProperties(ContractModel):
     record_key: Text
     dedup_key: Text
@@ -328,7 +410,9 @@ class SignalProperties(ContractModel):
 
 
 class GeneralSignalProperties(SignalProperties):
-    signal_kind: Literal["customer_feedback", "trend_indicator"]
+    signal_kind: Literal[
+        "customer_feedback", "trend_indicator", "study_finding", "commercial_indicator"
+    ]
 
 
 class PublicSentimentProperties(SignalProperties):
@@ -341,8 +425,16 @@ class CompetitorCapabilityProperties(SignalProperties):
     capability: Capability
 
 
+class ProductCapabilityProperties(SignalProperties):
+    signal_kind: Literal["product_capability"]
+    capability: Capability
+
+
 SignalPayload = Annotated[
-    GeneralSignalProperties | PublicSentimentProperties | CompetitorCapabilityProperties,
+    GeneralSignalProperties
+    | PublicSentimentProperties
+    | CompetitorCapabilityProperties
+    | ProductCapabilityProperties,
     Field(discriminator="signal_kind"),
 ]
 
@@ -385,7 +477,12 @@ class RequirementProperties(ContractModel):
     context: Context
     scope_role: Literal["successor_of_baseline_models"]
     horizon_years: Annotated[int, Field(ge=3, le=5)]
-    target_launch_year: int | None
+    target_launch_year: ModelYear | None
+    change_intent: Literal["introduce", "improve", "retain", "remove"]
+    baseline_status: Literal["known_present", "known_absent", "unknown"]
+    baseline_rationale: Text = Field(
+        description="Why this change intent fits the evidenced baseline; unknown does not mean absent."
+    )
     acceptance_criteria: Annotated[list[Criterion], Field(min_length=1)]
     prioritization_rationale: Text
     uncertainty: Uncertainty
@@ -437,6 +534,13 @@ class Feature(NodeBase):
     properties: FeatureProperties
 
 
+class CatalogItem(NodeBase):
+    """An option or package within one catalog edition; availability is an evidenced capability claim."""
+
+    type: Literal["CatalogItem"]
+    properties: CatalogItemProperties
+
+
 class Evidence(NodeBase):
     """An original record, excerpt, or statistic with a source locator. Repeated classification rows remain one feedback record."""
 
@@ -445,7 +549,7 @@ class Evidence(NodeBase):
 
 
 class Signal(NodeBase):
-    """One scoped interpretation of evidence: customer experience, public opinion, competitor capability, or trend indicator."""
+    """One scoped interpretation: experience, sentiment, capability, study finding, commercial indicator or trend."""
 
     type: Literal["Signal"]
     properties: SignalPayload
@@ -491,6 +595,7 @@ Node = Annotated[
     | VehicleModel
     | Market
     | Feature
+    | CatalogItem
     | Evidence
     | Signal
     | CustomerNeed

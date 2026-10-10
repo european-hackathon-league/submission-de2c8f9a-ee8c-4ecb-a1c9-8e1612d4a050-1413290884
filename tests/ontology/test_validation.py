@@ -90,6 +90,7 @@ class OntologyContractTests(unittest.TestCase):
         evidence["measurement"] = dict(
             metric="sales_volume",
             value=100,
+            value_range=None,
             unit="vehicles",
             statistic="count",
             temporal_status="historical",
@@ -99,6 +100,10 @@ class OntologyContractTests(unittest.TestCase):
             scale=None,
             comparison_basis=None,
             population=None,
+            test_standard=None,
+            conditions=[],
+            question=None,
+            response_category=None,
             notes=[],
         )
         self.assert_invalid("future measurements cannot be historical")
@@ -108,6 +113,7 @@ class OntologyContractTests(unittest.TestCase):
         evidence["measurement"] = dict(
             metric="response_share",
             value=1.5,
+            value_range=None,
             unit="proportion",
             statistic="proportion",
             temporal_status="historical",
@@ -117,6 +123,10 @@ class OntologyContractTests(unittest.TestCase):
             scale=None,
             comparison_basis=None,
             population=None,
+            test_standard=None,
+            conditions=[],
+            question=None,
+            response_category=None,
             notes=[],
         )
         self.assert_invalid("proportion must be")

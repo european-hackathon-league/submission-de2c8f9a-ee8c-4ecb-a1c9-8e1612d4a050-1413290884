@@ -2,7 +2,10 @@
 
 One research agent with three research modes is sufficient for the initial prototype. The agent plans queries and interprets retrieved content. A deterministic collection tool handles search, fetching, source capture, and extraction of original excerpts. The existing orchestration agent combines those findings with BMW data and proposes requirements.
 
-This document is a proposed interface. No scraper or live collection service is implemented by the ontology files.
+This document is a proposed collection interface for ontology v0.2.0. No scraper
+or live collection service is implemented by the ontology files. Deterministic
+query, trace, comparison, and proposal helpers are available in `bmwow.ontology`;
+the orchestration owner still needs to connect them to LangChain and ingestion.
 
 ## Inputs
 
@@ -42,9 +45,31 @@ Record the collection window and sampling limitations. A purposive internet samp
 
 Prefer official product pages, market-specific brochures, configurators, and manufacturer announcements for capability claims. Reviews can add experience evidence and source disagreement.
 
-Identify brand, model/generation, model year, market, variant, feature, and availability. Keep `announced`, `standard`, `optional`, and `available_unspecified` distinct. An announcement does not prove current availability. Missing mention is not proof a feature is absent.
+Identify brand, model/generation, model year, market, variant, feature, and
+availability. Keep `announced`, `standard`, `optional`, `available_unspecified`,
+`unavailable`, and `unknown` distinct. An announcement does not prove current
+availability. `unavailable` requires an explicit source claim; missing mention is
+unknown. Existing competitor Signals retain `competitor_capability`; BMW's own
+catalog baseline uses `product_capability`. Both carry a structured Capability
+and distinguish manufacturer claims from independently verified experience.
+An announced offering is planned and cannot establish a known-present BMW baseline.
+When explicit variant identities are available, keep the capability annotation
+consistent with the referenced VehicleModel.
 
-Retain measurement units and comparison basis. Range measured under WLTP, EPA, or an unspecified method cannot be treated as one directly comparable number. Preserve price currency, market, and tax basis in notes if price is collected; no detailed business-case model is required.
+When a captured catalog identifies packages or options, create edition-specific
+CatalogItems and connect capability Signals through `DESCRIBES`. `INCLUDES`
+records package contents within the same original edition. Preserve prerequisite,
+alternative, and exclusion conditions as `requires_all`, `requires_any`, and
+`excludes`; unresolved conditions remain textual and visible. Do not match item
+codes across catalog editions or infer availability from package membership alone.
+
+Retain measurement units, test standard, conditions, and comparison basis. A
+Measurement populates exactly one of scalar `value` or `value_range`. WLTP, EPA,
+and unspecified procedures are not automatically comparable. Capture genuine
+intervals without averaging; capture different standard/optional configurations
+as separate scalar claims. Keep charging state-of-charge windows, ambient or
+equipment conditions, and relevant footnotes. Preserve price currency, market,
+and tax basis in notes if price is collected; no detailed business-case model is required.
 
 A competitor feature is a comparison signal. Explain how it may inform a BMW customer need. It is not proof that the feature will be valued by BMW customers.
 
@@ -58,7 +83,24 @@ A Trend synthesizes indicators and cites them through `DERIVED_FROM`. Forecasts 
 
 ## Output and permissions
 
-The research agent supplies a closed candidate bundle containing context nodes, `SourceDocument`, `Evidence`, and `Signal` nodes, with source and derivation links. Its normal output does not contain `Decision` nodes. Orchestration can later synthesize Trends, Needs, Assumptions, and Requirements.
+The research agent supplies a closed ingestion candidate containing context nodes,
+`SourceDocument`, `Evidence`, and `Signal` nodes, plus CatalogItems when extracting
+identified offerings. Its normal output does not contain `Decision` nodes.
+Validate a candidate against the merged snapshot, so every context, item-condition,
+and source reference is present. Orchestration can later synthesize Trends, Needs,
+Assumptions, and Requirements.
+
+This ingestion path is separate from `validate_proposal`: that helper accepts one
+software-authored Requirement with narrowly allowed links to existing objects.
+It does not ingest new sources, Evidence, or CatalogItems. Use the generated
+`agent-contracts.json` for tool schemas and the [ontology guide](ontology.md) for
+query, trace, dossier, comparison, and proposal signatures. Bounded query/trace
+responses are tool results, not necessarily complete graph snapshots.
+
+A requirement's `BASELINED_ON` link records an applicable BMW capability;
+`JUSTIFIED_BY` records customer or trend reasoning. Improve/retain/remove require
+a known-present baseline. Unknown introduction requires a validation Assumption;
+a competitor offering or a failed BMW search does not prove BMW absence.
 
 Schema validation is not a permission boundary. The backend must restrict extraction/research actors to candidate writes and authenticate the product manager issuing review events. Tool-generated evidence and agent-generated interpretations should use separate write paths.
 
