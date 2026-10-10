@@ -3,8 +3,7 @@
   "checkpoint_id": "01M4KTRH9RR7A9XVXZV4FVA7BY",
   "session_id": "ses_ed8b6e6cfffe6FnkWiqF4aF6Mr",
   "strategy": "manual-commit",
-  "created_at": "2026-10-10T21:16:09.255747Z",
-  "branch": "chore/tidy-layout",
+  "created_at": "2026-10-10T21:26:16.075468Z",
   "checkpoints_count": 3,
   "save_step_count": 3,
   "files_touched": [
@@ -27,15 +26,15 @@
     "turn_count": 3
   },
   "initial_attribution": {
-    "calculated_at": "2026-10-10T21:16:09.222223Z",
+    "calculated_at": "2026-10-10T21:26:16.047217Z",
     "agent_lines": 14,
     "agent_removed": 0,
     "human_added": 48,
     "human_modified": 50,
     "human_removed": 0,
     "total_committed": 108,
-    "total_lines_changed": 758,
-    "agent_percentage": 1.8469656992084433,
+    "total_lines_changed": 795,
+    "agent_percentage": 1.7610062893081762,
     "metric_version": 2
   },
   "prompt_attributions": [
