@@ -1,0 +1,113 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KT7DEK5G4Y1BXAJEZJMF1V",
+  "session_id": "ses_ed8b6e6cfffe6FnkWiqF4aF6Mr",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T21:06:48.399988Z",
+  "branch": "chore/tidy-layout",
+  "checkpoints_count": 3,
+  "save_step_count": 3,
+  "files_touched": [
+    ".gitignore"
+  ],
+  "agent": "OpenCode",
+  "model": "anthropic.claude-opus-5-5",
+  "turn_id": "844379c7bae1",
+  "checkpoint_transcript_start": 14,
+  "transcript_lines_at_start": 14,
+  "compact_transcript_start": 14,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T21:06:48.37168Z",
+    "agent_lines": 23,
+    "agent_removed": 0,
+    "human_added": 13808,
+    "human_modified": 9,
+    "human_removed": 0,
+    "total_committed": 13838,
+    "total_lines_changed": 27586,
+    "agent_percentage": 0.08337562531718988,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1800,
+      "user_lines_removed": 6,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        ".gitignore": 2,
+        ".mcp.json": 8,
+        "AGENTS.md": 4,
+        "CONTEXT.md": 105,
+        "docs/preprocess-pipeline-spec.md": 530,
+        "migrations/0000_init.sql": 38,
+        "opencode.json": 5,
+        "package.json": 8,
+        "pnpm-lock.yaml": 170,
+        "scripts/preprocess.ts": 563,
+        "scripts/vfc-taxonomy.json": 315,
+        "src/db/schema.ts": 42
+      },
+      "user_removed_per_file": {
+        "package.json": 2,
+        "pnpm-lock.yaml": 4
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 2558,
+      "user_lines_removed": 71,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "components.json": 25,
+        "package.json": 15,
+        "pnpm-lock.yaml": 2337,
+        "src/app/globals.css": 118,
+        "src/app/layout.tsx": 5,
+        "src/components/ui/button.tsx": 57,
+        "src/lib/utils.ts": 1
+      },
+      "user_removed_per_file": {
+        "package.json": 2,
+        "pnpm-lock.yaml": 53,
+        "src/app/globals.css": 14,
+        "src/app/layout.tsx": 2
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 2382,
+      "user_lines_removed": 67,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "components.json": 25,
+        "package.json": 7,
+        "pnpm-lock.yaml": 2169,
+        "src/app/globals.css": 118,
+        "src/app/layout.tsx": 5,
+        "src/components/ui/button.tsx": 57,
+        "src/lib/utils.ts": 1
+      },
+      "user_removed_per_file": {
+        "pnpm-lock.yaml": 51,
+        "src/app/globals.css": 14,
+        "src/app/layout.tsx": 2
+      }
+    }
+  ]
+}
