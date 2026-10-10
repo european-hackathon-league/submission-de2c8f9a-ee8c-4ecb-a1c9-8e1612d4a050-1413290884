@@ -1,0 +1,77 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4K69NTG8HP8P71BNT8454JQ",
+  "session_id": "ses_ed99f8706ffeEzANOx4QYf1adp",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T15:18:33.039212Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "save_step_count": 3,
+  "files_touched": [
+    ".oxfmtrc.json",
+    ".oxlintrc.json",
+    "eslint.config.mjs",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "scripts/prepare_data.ts",
+    "src/app/layout.tsx"
+  ],
+  "agent": "OpenCode",
+  "model": "anthropic.claude-sonnet-5-5",
+  "turn_id": "016d560170b2",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 72817,
+    "cache_read_tokens": 433352,
+    "output_tokens": 1623,
+    "api_call_count": 8
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T15:18:33.031833Z",
+    "agent_lines": 422,
+    "agent_removed": 2804,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 422,
+    "total_lines_changed": 3226,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 20709,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "data/f70_feedback.csv": 5159,
+        "data/g60_feedback.csv": 7409,
+        "data/g70_feedback.csv": 7200,
+        "package.json": 5,
+        "pnpm-lock.yaml": 935,
+        "pnpm-workspace.yaml": 1
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 20682,
+      "agent_lines_removed": 2800
+    }
+  ]
+}
