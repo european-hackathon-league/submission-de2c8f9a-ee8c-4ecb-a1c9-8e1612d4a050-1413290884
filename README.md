@@ -49,6 +49,7 @@ contracts/ontology/           Shared JSON artifacts for frontend, agents, and da
   examples/synthetic.json     Shareable integration fixture, with invented evidence
 docs/ontology.md              Ontology meaning, design factors, and integration guidance
 docs/ontology-consumers.md    Worked dossier and frontend/orchestration handoff
+docs/project-plan.md          Next milestones, team boundaries, and BMW data restrictions
 docs/web-research.md          Proposed web evidence collection contract
 scripts/inspect_parking_dossier.py  Runnable synthetic four-question example
 tests/ontology/               Contract, graph, interoperability, and CLI tests
@@ -157,6 +158,10 @@ applicable installed Next.js guide as directed by `AGENTS.md` before frontend ch
 
 ## Team handoff
 
+See the [project plan](docs/project-plan.md) for the complete evidence-to-review
+workflow and the next milestone. Ontology v0.2.0 is the shared contract; private
+ingestion, SQL adapters, LangChain orchestration, and the review API/UI are next.
+
 Start with the [consumer guide](docs/ontology-consumers.md) and run
 `uv run python scripts/inspect_parking_dossier.py`. It answers the four product
 questions from the existing dossier while retaining each edge's target and
@@ -178,7 +183,10 @@ rationale. Add `--json` for the existing generated RequirementDossier payload.
   generator or API endpoint has been selected yet.
 - **SQL/data:** raw tables can retain the supplied column layout. Map them through
   adapters into Evidence and related nodes; the ontology is not the required raw
-  SQL table design. See [source mappings](contracts/ontology/source-mappings.json).
+  SQL table design. Neon is the selected shared PostgreSQL provider; agree one
+  canonical dataset and coordinated imports/migrations. Its setup and adapter are
+  still pending. See [shared database plan](docs/project-plan.md#shared-database-neon)
+  and [source mappings](contracts/ontology/source-mappings.json).
 - **Web research:** public sentiment, competitor claims, and trends use the same
   evidence contract. See [collection guidance](docs/web-research.md).
   No scraper has been implemented yet.
@@ -200,6 +208,16 @@ scripts that use the old artifact paths. Python imports (`bmwow.ontology`), CLI
 names, dependency files, and the ontology version remain the same.
 
 ## Sharing with teammates
+
+**BMW prohibits uploading its data to GitHub, including private repositories.**
+Share code, schemas, migrations, and synthetic fixtures through GitHub. Keep
+originals and data-bearing derivatives, exports, embeddings, generated proposals,
+screenshots, and logs/transcripts local or in BMW-permitted storage. The team's
+current understanding permits an access-controlled server database outside
+GitHub; Neon is the selected provider. Commit its migrations and import scripts,
+but not its contents or credentials. GitHub CI and build artifacts must use
+synthetic content. See the
+[data boundary](docs/project-plan.md#bmw-data-boundary).
 
 Use [issue #3](https://github.com/itsmeyaw/bmwow/issues/3) for sanitized agent
 discussion and proposals. Agents must receive explicit human confirmation in
@@ -244,11 +262,12 @@ entire configure --local --skip-push-sessions
 ```
 
 This writes `strategy_options.push_sessions: false` to ignored
-`.entire/settings.local.json`. Capture continues locally, and each teammate can
-choose their own setting. Do not push checkpoint refs or `entire/*` branches with
-`--all` or `--mirror` when you intend to share only source code. This option does
-not remove checkpoint history that was already pushed. If the team later wants
-checkpoint sharing, review its contents and access first. See
+`.entire/settings.local.json`. Capture continues locally; each teammate must apply
+this setting in their clone for this project. Do not push checkpoint refs or
+`entire/*` branches with `--all` or `--mirror` when you intend to share only source
+code. This option does
+not remove checkpoint history that was already pushed. Checkpoints containing
+BMW data must stay out of GitHub too. See
 [keeping checkpoints local](https://docs.entire.io/guides/checkpoints/keep-checkpoints-local).
 
 ## macOS environment troubleshooting
