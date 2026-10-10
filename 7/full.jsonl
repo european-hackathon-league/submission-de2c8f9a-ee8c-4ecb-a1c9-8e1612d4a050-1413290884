@@ -1,0 +1,812 @@
+{
+  "info": {
+    "id": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+    "slug": "eager-forest",
+    "projectID": "b61ac060210102fde081973a1ada331309e75b9d",
+    "directory": "/Users/itsmeyaw/projects/bmwow",
+    "path": "",
+    "parentID": "ses_ed97ec5ebffejzBwJF1VkA26nl",
+    "title": "Write Drizzle schema (@general subagent)",
+    "agent": "general",
+    "model": {
+      "id": "anthropic.claude-opus-5-5",
+      "providerID": "amazon-bedrock",
+      "variant": "high"
+    },
+    "version": "1.18.34",
+    "summary": {
+      "additions": 0,
+      "deletions": 0,
+      "files": 0
+    },
+    "cost": 0.8193661999999999,
+    "tokens": {
+      "input": 16,
+      "output": 3783,
+      "reasoning": 0,
+      "cache": {
+        "read": 699361,
+        "write": 120754
+      }
+    },
+    "permission": [
+      {
+        "permission": "task",
+        "pattern": "*",
+        "action": "deny"
+      }
+    ],
+    "time": {
+      "created": 1791657729971,
+      "updated": 1791657805006
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "role": "user",
+        "time": {
+          "created": 1791657729984
+        },
+        "agent": "general",
+        "model": {
+          "providerID": "amazon-bedrock",
+          "modelID": "anthropic.claude-opus-5-5",
+          "variant": "high"
+        },
+        "summary": {
+          "diffs": [
+            {
+              "file": "src/db/schema.ts",
+              "patch": "Index: src/db/schema.ts\n===================================================================\n--- src/db/schema.ts\t\n+++ src/db/schema.ts\t\n@@ -0,0 +1,42 @@\n+// Mirrors migrations/0000_init.sql (DDL is the source of truth for indexes/constraints).\n+import { sql } from \"drizzle-orm\";\n+import { customType, numeric, pgTable, text, timestamp, uuid, vector } from \"drizzle-orm/pg-core\";\n+\n+const tsvector = customType<{ data: string }>({\n+  dataType: () => \"tsvector\",\n+});\n+\n+export const feedbackEntries = pgTable(\"feedback_entries\", {\n+  id: uuid(\"id\").primaryKey().defaultRandom(),\n+  feedbackExplorerId: text(\"feedback_explorer_id\").notNull().unique(),\n+  source: text(\"source\"),\n+  brand: text(\"brand\"),\n+  salesDescription: text(\"sales_description\"),\n+  country: text(\"country\"),\n+  derivateCode: text(\"derivate_code\"),\n+  engineType: text(\"engine_type\"),\n+  rawFeedback: text(\"raw_feedback\").notNull(),\n+  embedding: vector(\"embedding\", { dimensions: 1536 }),\n+  searchTsv: tsvector(\"search_tsv\").generatedAlwaysAs(sql`to_tsvector('english', raw_feedback)`),\n+  createdAt: timestamp(\"created_at\", { withTimezone: true }).notNull().defaultNow(),\n+});\n+\n+export const feedbackAspects = pgTable(\"feedback_aspects\", {\n+  id: uuid(\"id\").primaryKey().defaultRandom(),\n+  feedbackEntryId: uuid(\"feedback_entry_id\")\n+    .notNull()\n+    .references(() => feedbackEntries.id, { onDelete: \"cascade\" }),\n+  feedbackType: text(\"feedback_type\"),\n+  vfcCategory: text(\"vfc_category\").notNull(),\n+  aspectTerm: text(\"aspect_term\"),\n+  aspectLabelRaw: text(\"aspect_label_raw\"),\n+  issueType: text(\"issue_type\").notNull(),\n+  quoteSnippet: text(\"quote_snippet\"),\n+  sentiment: text(\"sentiment\").notNull(),\n+  sentimentScore: numeric(\"sentiment_score\", { precision: 3, scale: 2 }),\n+  extractionSource: text(\"extraction_source\").notNull(),\n+  createdAt: timestamp(\"created_at\", { withTimezone: true }).notNull().defaultNow(),\n+});\n+\n+export type NewFeedbackEntry = typeof feedbackEntries.$inferInsert;\n+export type NewFeedbackAspect = typeof feedbackAspects.$inferInsert;\n",
+              "additions": 42,
+              "deletions": 0,
+              "status": "added"
+            }
+          ]
+        },
+        "id": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "type": "text",
+          "text": "You are writing code (not just researching) in the repo at /Users/itsmeyaw/projects/bmwow (pnpm, TypeScript, Next.js 16, drizzle-orm 1.0.0-rc.4 — a release candidate whose API may differ from your training data; read the .d.ts files under node_modules/drizzle-orm/pg-core/ to confirm every function you use).\n\nTask: create `src/db/schema.ts`, a Drizzle schema that EXACTLY mirrors the hand-written DDL in `migrations/0000_init.sql` (read it first). DDL stays the source of truth for indexes/constraints; do NOT declare indexes or CHECK constraints in Drizzle, and do not use drizzle-kit. Keep the file minimal — no extra abstractions, no comments beyond one header line.\n\nRequired exports and TS keys (another agent is writing code against this exact contract in parallel — do not rename anything):\n\n`feedbackEntries` = pgTable(\"feedback_entries\", { id (uuid PK defaultRandom), feedbackExplorerId (text \"feedback_explorer_id\" notNull unique), source, brand, salesDescription, country, derivateCode, engineType (all nullable text, snake_case db names), rawFeedback (text notNull), embedding (pgvector `vector` with dimensions 1536, nullable, TS type number[]), searchTsv (column \"search_tsv\", a tsvector — use customType from drizzle-orm/pg-core with dataType \"tsvector\", and mark it generatedAlwaysAs(sql`to_tsvector('english', raw_feedback)`) so it is excluded from inserts), createdAt (timestamp withTimezone, notNull, defaultNow) })\n\n`feedbackAspects` = pgTable(\"feedback_aspects\", { id (uuid PK defaultRandom), feedbackEntryId (uuid \"feedback_entry_id\" notNull, references feedbackEntries.id onDelete cascade), feedbackType, aspectTerm, aspectLabelRaw, quoteSnippet (nullable text), vfcCategory, issueType, sentiment, extractionSource (text notNull), sentimentScore (numeric precision 3 scale 2, nullable, default string mode), createdAt (timestamptz notNull defaultNow) })\n\nAlso export `type NewFeedbackEntry = typeof feedbackEntries.$inferInsert` and `type NewFeedbackAspect = typeof feedbackAspects.$inferInsert`.\n\nUse explicit snake_case column names in every column builder call so it does not depend on casing config.\n\nVerify: write a throwaway file in /var/folders/zm/8n69b_ld4d17cf77mbq1f0g00000gn/T/opencode (or a temp .ts inside the repo you then delete) that assigns sample objects to NewFeedbackEntry / NewFeedbackAspect, confirming (a) `embedding: number[]` is accepted, (b) `searchTsv` is NOT an allowed insert key (use @ts-expect-error), (c) `sentimentScore: \"-0.90\"` is accepted. Run `pnpm exec tsc --noEmit -p .` from the repo root (pre-existing unrelated errors in other files may exist; only care about schema.ts and your check file). Delete the throwaway file afterwards. Do not touch any other files.\n\nReturn: the final contents of src/db/schema.ts, and the tsc result.",
+          "id": "prt_1271f5fc20018FDVW2CqvYD6Fw",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f5fc0001ZVgOO2YN7MxzTL"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.560166,
+        "tokens": {
+          "total": 111491,
+          "input": 4,
+          "output": 181,
+          "reasoning": 0,
+          "cache": {
+            "write": 111306,
+            "read": 0
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657730342,
+          "completed": 1791657742701
+        },
+        "finish": "tool-calls",
+        "id": "msg_1271f6126001wPsBN9Xh4mGuHg",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-start",
+          "id": "prt_1271f8778001xglGVMZIrkN7mx",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f6126001wPsBN9Xh4mGuHg"
+        },
+        {
+          "type": "reasoning",
+          "text": "I should start by checking the DDL and the drizzle type definition files.\n\n",
+          "time": {
+            "start": 1791657741522,
+            "end": 1791657741737
+          },
+          "metadata": {
+            "bedrock": {
+              "signature": "CAQS/QMKEggSEAEYAjgBQgh0aGlua2luZxIMopqrJOV1K0ectDDYGgwROqAzmoLXLrtzEcMiMIQ8z2u56+eiRId50cR2vfzBzkuVtUJBiHOaKkxiup+G2hNpvJkIc8AdLe1iU2O7byqYAyb9DMgLyHh/J5HxkSoGbCo+cJv6EIU0MxTPDzdYGC2K+99UfR0e61jGC9hhxbuHjv3DdvURyUdIonGcR/fHbqfPnZbx6Rku8tKev89t7d//2wRGAva/xCU4bFJZ41edPAJWfd9N2Dx6P2dy+CiebEu/zW+GngZVbBu5iER3i/oq4fDCiok+pL2aGxguqURhI6fmm5lttkee0Tdqfr3w/gUDvzsbdd4jWPbVpBF4T6gCXVyraXw3Lb4VUu4mcb+k7WE5QIYMPfSAHc03uhJnoo/83yPDaanmBNr0/BWUeKHmSmVEvwQodFI8Nqs+4QjVpvwt64wUgYIS5fupxsJsYil7YRuh8Efo6tRiouEI7mrAD66W81SgkfmT6aq2RWT3MWaR/WjXWKVVP57JWWRrvlPpeIMI/guL/eDcuInD8vRSlggFlVZ7iSpZW1QCvWjfOq1YkLXXO21GN/gAZATMh6eeFRoHavHHU4+fGlNp6ahDNre39O8wa9Ym+fHbJayfgWvyUUamPvHlnRWHfGeA+5Rrk7lf/QmTlhgB"
+            }
+          },
+          "id": "prt_1271f8cd2001PkVyBKZ445XQgn",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f6126001wPsBN9Xh4mGuHg"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "tooluse_58VzmTZXNwHMJ1gdBeIpxn",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "cat migrations/0000_init.sql; ls src src/db 2>&1; ls node_modules/drizzle-orm/pg-core/columns/ | head -80; cat package.json | grep -n drizzle",
+              "workdir": "/Users/itsmeyaw/projects/bmwow"
+            },
+            "output": "-- Idempotent: scripts/preprocess.ts applies this on every run.\nCREATE EXTENSION IF NOT EXISTS vector;\n\nCREATE TABLE IF NOT EXISTS feedback_entries (\n  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  feedback_explorer_id TEXT NOT NULL UNIQUE,\n  source               TEXT,\n  brand                TEXT,\n  sales_description    TEXT,\n  country              TEXT,\n  derivate_code        TEXT,\n  engine_type          TEXT,\n  raw_feedback         TEXT NOT NULL,\n  embedding            vector(1536),\n  search_tsv           tsvector GENERATED ALWAYS AS (to_tsvector('english', raw_feedback)) STORED,\n  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS feedback_aspects (\n  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  feedback_entry_id UUID NOT NULL REFERENCES feedback_entries(id) ON DELETE CASCADE,\n  feedback_type     TEXT,\n  vfc_category      TEXT NOT NULL,\n  aspect_term       TEXT,\n  aspect_label_raw  TEXT,\n  issue_type        TEXT NOT NULL,\n  quote_snippet     TEXT,\n  sentiment         TEXT NOT NULL CHECK (sentiment IN ('Positive', 'Negative', 'Neutral')),\n  sentiment_score   NUMERIC(3,2) CHECK (sentiment_score BETWEEN -1 AND 1),\n  extraction_source TEXT NOT NULL CHECK (extraction_source IN ('vfc_label', 'llm')),\n  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\n\nCREATE INDEX IF NOT EXISTS feedback_entries_derivate_engine_idx ON feedback_entries (derivate_code, engine_type);\nCREATE INDEX IF NOT EXISTS feedback_entries_embedding_idx ON feedback_entries USING hnsw (embedding vector_cosine_ops);\nCREATE INDEX IF NOT EXISTS feedback_entries_search_tsv_idx ON feedback_entries USING gin (search_tsv);\nCREATE INDEX IF NOT EXISTS feedback_aspects_category_sentiment_idx ON feedback_aspects (vfc_category, sentiment);\nCREATE INDEX IF NOT EXISTS feedback_aspects_entry_idx ON feedback_aspects (feedback_entry_id);\nls: src/db: No such file or directory\nsrc:\napp\nall.cjs\nall.cjs.map\nall.d.cts\nall.d.ts\nall.js\nall.js.map\nbigint.cjs\nbigint.cjs.map\nbigint.d.cts\nbigint.d.ts\nbigint.js\nbigint.js.map\nbigserial.cjs\nbigserial.cjs.map\nbigserial.d.cts\nbigserial.d.ts\nbigserial.js\nbigserial.js.map\nboolean.cjs\nboolean.cjs.map\nboolean.d.cts\nboolean.d.ts\nboolean.js\nboolean.js.map\nbytea.cjs\nbytea.cjs.map\nbytea.d.cts\nbytea.d.ts\nbytea.js\nbytea.js.map\nchar.cjs\nchar.cjs.map\nchar.d.cts\nchar.d.ts\nchar.js\nchar.js.map\ncidr.cjs\ncidr.cjs.map\ncidr.d.cts\ncidr.d.ts\ncidr.js\ncidr.js.map\ncommon.cjs\ncommon.cjs.map\ncommon.d.cts\ncommon.d.ts\ncommon.js\ncommon.js.map\ncustom.cjs\ncustom.cjs.map\ncustom.d.cts\ncustom.d.ts\ncustom.js\ncustom.js.map\ndate.cjs\ndate.cjs.map\ndate.common.cjs\ndate.common.cjs.map\ndate.common.d.cts\ndate.common.d.ts\ndate.common.js\ndate.common.js.map\ndate.d.cts\ndate.d.ts\ndate.js\ndate.js.map\ndouble-precision.cjs\ndouble-precision.cjs.map\ndouble-precision.d.cts\ndouble-precision.d.ts\ndouble-precision.js\ndouble-precision.js.map\nenum.cjs\nenum.cjs.map\nenum.d.cts\nenum.d.ts\nenum.js\nenum.js.map\nindex.cjs\nindex.d.cts\n17:    \"drizzle-orm\": \"1.0.0-rc.4\",\n31:    \"drizzle-kit\": \"1.0.0-rc.4\",\n",
+            "metadata": {
+              "output": "-- Idempotent: scripts/preprocess.ts applies this on every run.\nCREATE EXTENSION IF NOT EXISTS vector;\n\nCREATE TABLE IF NOT EXISTS feedback_entries (\n  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  feedback_explorer_id TEXT NOT NULL UNIQUE,\n  source               TEXT,\n  brand                TEXT,\n  sales_description    TEXT,\n  country              TEXT,\n  derivate_code        TEXT,\n  engine_type          TEXT,\n  raw_feedback         TEXT NOT NULL,\n  embedding            vector(1536),\n  search_tsv           tsvector GENERATED ALWAYS AS (to_tsvector('english', raw_feedback)) STORED,\n  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS feedback_aspects (\n  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  feedback_entry_id UUID NOT NULL REFERENCES feedback_entries(id) ON DELETE CASCADE,\n  feedback_type     TEXT,\n  vfc_category      TEXT NOT NULL,\n  aspect_term       TEXT,\n  aspect_label_raw  TEXT,\n  issue_type        TEXT NOT NULL,\n  quote_snippet     TEXT,\n  sentiment         TEXT NOT NULL CHECK (sentiment IN ('Positive', 'Negative', 'Neutral')),\n  sentiment_score   NUMERIC(3,2) CHECK (sentiment_score BETWEEN -1 AND 1),\n  extraction_source TEXT NOT NULL CHECK (extraction_source IN ('vfc_label', 'llm')),\n  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\n\nCREATE INDEX IF NOT EXISTS feedback_entries_derivate_engine_idx ON feedback_entries (derivate_code, engine_type);\nCREATE INDEX IF NOT EXISTS feedback_entries_embedding_idx ON feedback_entries USING hnsw (embedding vector_cosine_ops);\nCREATE INDEX IF NOT EXISTS feedback_entries_search_tsv_idx ON feedback_entries USING gin (search_tsv);\nCREATE INDEX IF NOT EXISTS feedback_aspects_category_sentiment_idx ON feedback_aspects (vfc_category, sentiment);\nCREATE INDEX IF NOT EXISTS feedback_aspects_entry_idx ON feedback_aspects (feedback_entry_id);\nls: src/db: No such file or directory\nsrc:\napp\nall.cjs\nall.cjs.map\nall.d.cts\nall.d.ts\nall.js\nall.js.map\nbigint.cjs\nbigint.cjs.map\nbigint.d.cts\nbigint.d.ts\nbigint.js\nbigint.js.map\nbigserial.cjs\nbigserial.cjs.map\nbigserial.d.cts\nbigserial.d.ts\nbigserial.js\nbigserial.js.map\nboolean.cjs\nboolean.cjs.map\nboolean.d.cts\nboolean.d.ts\nboolean.js\nboolean.js.map\nbytea.cjs\nbytea.cjs.map\nbytea.d.cts\nbytea.d.ts\nbytea.js\nbytea.js.map\nchar.cjs\nchar.cjs.map\nchar.d.cts\nchar.d.ts\nchar.js\nchar.js.map\ncidr.cjs\ncidr.cjs.map\ncidr.d.cts\ncidr.d.ts\ncidr.js\ncidr.js.map\ncommon.cjs\ncommon.cjs.map\ncommon.d.cts\ncommon.d.ts\ncommon.js\ncommon.js.map\ncustom.cjs\ncustom.cjs.map\ncustom.d.cts\ncustom.d.ts\ncustom.js\ncustom.js.map\ndate.cjs\ndate.cjs.map\ndate.common.cjs\ndate.common.cjs.map\ndate.common.d.cts\ndate.common.d.ts\ndate.common.js\ndate.common.js.map\ndate.d.cts\ndate.d.ts\ndate.js\ndate.js.map\ndouble-precision.cjs\ndouble-precision.cjs.map\ndouble-precision.d.cts\ndouble-precision.d.ts\ndouble-precision.js\ndouble-precision.js.map\nenum.cjs\nenum.cjs.map\nenum.d.cts\nenum.d.ts\nenum.js\nenum.js.map\nindex.cjs\nindex.d.cts\n17:    \"drizzle-orm\": \"1.0.0-rc.4\",\n31:    \"drizzle-kit\": \"1.0.0-rc.4\",\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "cat migrations/0000_init.sql; ls src src/db 2>&1; ls node_modules/drizzle-orm/pg-core/columns/ | head -80; cat package.json | grep -n drizzle",
+            "time": {
+              "start": 1791657742512,
+              "end": 1791657742553
+            }
+          },
+          "id": "prt_1271f8dab0019Cd8VdvrFgG4u4",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f6126001wPsBN9Xh4mGuHg"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-finish",
+          "tokens": {
+            "total": 111491,
+            "input": 4,
+            "output": 181,
+            "reasoning": 0,
+            "cache": {
+              "write": 111306,
+              "read": 0
+            }
+          },
+          "cost": 0.560166,
+          "id": "prt_1271f9120001E0rxvUuw9W9p6m",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f6126001wPsBN9Xh4mGuHg"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.0379592,
+        "tokens": {
+          "total": 113468,
+          "input": 2,
+          "output": 326,
+          "reasoning": 0,
+          "cache": {
+            "write": 1834,
+            "read": 111306
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657742705,
+          "completed": 1791657748966
+        },
+        "finish": "tool-calls",
+        "id": "msg_1271f9171001iyJ2W7zngX2dnT",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-start",
+          "id": "prt_1271f9b7e001ukjg6X4adwWqYU",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f9171001iyJ2W7zngX2dnT"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "tooluse_r3618j5dp8HMxJUFoJ8ZE0",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "cd node_modules/drizzle-orm/pg-core/columns; cat custom.d.ts | grep -n -E \"customType|dataType|interface CustomTypeValues|data:|driverData\" | head -30; echo ---; cat vector_extension/vector.d.ts 2>/dev/null | tail -30; ls vector_extension 2>/dev/null; echo ---; grep -n -E \"export declare function numeric|mode|precision\" numeric.d.ts | head; echo ---; grep -n -E \"generatedAlwaysAs|references|defaultRandom|withTimezone|defaultNow\" common.d.ts uuid.d.ts timestamp.d.ts ../../column-builder.d.ts | head -30",
+              "workdir": "/Users/itsmeyaw/projects/bmwow"
+            },
+            "output": "11:  dataType: 'custom';\n12:  data: T['data'];\n13:  driverParam: T['driverData'];\n20:  customTypeValues: CustomTypeValues;\n24:  customTypeParams: CustomTypeParams<any>;\n27:  constructor(name: string, fieldConfig: CustomTypeValues['config'], customTypeParams: CustomTypeParams<any>);\n37:interface CustomTypeValues {\n43:   * If you want your column to be `string` type after selecting/or on inserting - use `data: string`. Like `text`, `varchar`\n45:   * If you want your column to be `number` type after selecting/or on inserting - use `data: number`. Like `integer`\n47:  data: unknown;\n51:  driverData?: unknown;\n59:   * Defaults to {@link driverData}\n69:   * What config type should be used for {@link CustomTypeParams} `dataType` generation\n81:   * const customSerial = customType<{ data: number, notNull: true, default: true }>({\n82:   * \t  dataType() {\n92:   * const customSerial = customType<{ data: number, notNull: true, default: true }>({\n93:   * \t  dataType() {\n119:   *   dataType() {\n125:   *   dataType(config) {\n130:  dataType: (config: T['config'] | (Equal<T['configRequired'], true> extends true ? never : undefined)) => string;\n141:  toDriver?: (value: T['data']) => T['driverData'] | SQL;\n165:  fromDriver?: (value: 'driverOutput' extends keyof T ? T['driverOutput'] : T['driverData']) => T['data'];\n262:declare function customType<T extends CustomTypeValues = CustomTypeValues>(customTypeParams: CustomTypeParams<T>): Equal<T['configRequired'], true> extends true ? {\n270:export { ConvertCustomConfig, CustomTypeParams, CustomTypeValues, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, customType };\n---\nimport { PgColumn, PgColumnBuilder } from \"../common.js\";\nimport { entityKind } from \"../../../entity.js\";\n\n//#region src/pg-core/columns/vector_extension/vector.d.ts\ndeclare class PgVectorBuilder extends PgColumnBuilder<{\n  dataType: 'array vector';\n  data: number[];\n  driverParam: string;\n}, {\n  length: number;\n  isLengthExact: true;\n}> {\n  static readonly [entityKind]: string;\n  constructor(name: string, config: PgVectorConfig);\n}\ndeclare class PgVector extends PgColumn<'array vector'> {\n  static readonly [entityKind]: string;\n  getSQLType(): string;\n  mapToDriverValue: (value: unknown) => unknown;\n}\ninterface PgVectorConfig {\n  dimensions: number;\n}\ndeclare function vector(config: PgVectorConfig): PgVectorBuilder;\ndeclare function vector(name: string, config: PgVectorConfig): PgVectorBuilder;\n//#endregion\nexport { PgVector, PgVectorBuilder, PgVectorConfig, vector };\n//# sourceMappingURL=vector.d.ts.mapbit.cjs\nbit.cjs.map\nbit.d.cts\nbit.d.ts\nbit.js\nbit.js.map\nhalfvec.cjs\nhalfvec.cjs.map\nhalfvec.d.cts\nhalfvec.d.ts\nhalfvec.js\nhalfvec.js.map\nsparsevec.cjs\nsparsevec.cjs.map\nsparsevec.d.cts\nsparsevec.d.ts\nsparsevec.js\nsparsevec.js.map\nvector.cjs\nvector.cjs.map\nvector.d.cts\nvector.d.ts\nvector.js\nvector.js.map\n---\n12:  precision: number | undefined;\n16:  constructor(name: string, precision?: number, scale?: number);\n20:  readonly precision: number | undefined;\n30:  precision: number | undefined;\n34:  constructor(name: string, precision?: number, scale?: number);\n38:  readonly precision: number | undefined;\n49:  precision: number | undefined;\n53:  constructor(name: string, precision?: number, scale?: number);\n57:  readonly precision: number | undefined;\n64:  precision: number;\n---\ncommon.d.ts:253:  references(ref: ReferenceConfig['ref'], config?: ReferenceConfig['config']): this;\ncommon.d.ts:257:  generatedAlwaysAs(as: SQL | (() => SQL)): SetHasGenerated<this>;\nuuid.d.ts:15:  defaultRandom(): ReturnType<this['default']>;\ntimestamp.d.ts:13:  withTimezone: boolean;\ntimestamp.d.ts:17:  constructor(name: string, withTimezone: boolean, precision: number | undefined);\ntimestamp.d.ts:21:  readonly withTimezone: boolean;\ntimestamp.d.ts:32:  withTimezone: boolean;\ntimestamp.d.ts:36:  constructor(name: string, withTimezone: boolean, precision: number | undefined);\ntimestamp.d.ts:40:  readonly withTimezone: boolean;\ntimestamp.d.ts:50:  withTimezone?: boolean;\n../../column-builder.d.ts:218:  abstract generatedAlwaysAs(as: SQL | T['data'] | (() => SQL), config?: Partial<GeneratedColumnConfig<unknown>>): HasGenerated<this, {\n",
+            "metadata": {
+              "output": "11:  dataType: 'custom';\n12:  data: T['data'];\n13:  driverParam: T['driverData'];\n20:  customTypeValues: CustomTypeValues;\n24:  customTypeParams: CustomTypeParams<any>;\n27:  constructor(name: string, fieldConfig: CustomTypeValues['config'], customTypeParams: CustomTypeParams<any>);\n37:interface CustomTypeValues {\n43:   * If you want your column to be `string` type after selecting/or on inserting - use `data: string`. Like `text`, `varchar`\n45:   * If you want your column to be `number` type after selecting/or on inserting - use `data: number`. Like `integer`\n47:  data: unknown;\n51:  driverData?: unknown;\n59:   * Defaults to {@link driverData}\n69:   * What config type should be used for {@link CustomTypeParams} `dataType` generation\n81:   * const customSerial = customType<{ data: number, notNull: true, default: true }>({\n82:   * \t  dataType() {\n92:   * const customSerial = customType<{ data: number, notNull: true, default: true }>({\n93:   * \t  dataType() {\n119:   *   dataType() {\n125:   *   dataType(config) {\n130:  dataType: (config: T['config'] | (Equal<T['configRequired'], true> extends true ? never : undefined)) => string;\n141:  toDriver?: (value: T['data']) => T['driverData'] | SQL;\n165:  fromDriver?: (value: 'driverOutput' extends keyof T ? T['driverOutput'] : T['driverData']) => T['data'];\n262:declare function customType<T extends CustomTypeValues = CustomTypeValues>(customTypeParams: CustomTypeParams<T>): Equal<T['configRequired'], true> extends true ? {\n270:export { ConvertCustomConfig, CustomTypeParams, CustomTypeValues, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, customType };\n---\nimport { PgColumn, PgColumnBuilder } from \"../common.js\";\nimport { entityKind } from \"../../../entity.js\";\n\n//#region src/pg-core/columns/vector_extension/vector.d.ts\ndeclare class PgVectorBuilder extends PgColumnBuilder<{\n  dataType: 'array vector';\n  data: number[];\n  driverParam: string;\n}, {\n  length: number;\n  isLengthExact: true;\n}> {\n  static readonly [entityKind]: string;\n  constructor(name: string, config: PgVectorConfig);\n}\ndeclare class PgVector extends PgColumn<'array vector'> {\n  static readonly [entityKind]: string;\n  getSQLType(): string;\n  mapToDriverValue: (value: unknown) => unknown;\n}\ninterface PgVectorConfig {\n  dimensions: number;\n}\ndeclare function vector(config: PgVectorConfig): PgVectorBuilder;\ndeclare function vector(name: string, config: PgVectorConfig): PgVectorBuilder;\n//#endregion\nexport { PgVector, PgVectorBuilder, PgVectorConfig, vector };\n//# sourceMappingURL=vector.d.ts.mapbit.cjs\nbit.cjs.map\nbit.d.cts\nbit.d.ts\nbit.js\nbit.js.map\nhalfvec.cjs\nhalfvec.cjs.map\nhalfvec.d.cts\nhalfvec.d.ts\nhalfvec.js\nhalfvec.js.map\nsparsevec.cjs\nsparsevec.cjs.map\nsparsevec.d.cts\nsparsevec.d.ts\nsparsevec.js\nsparsevec.js.map\nvector.cjs\nvector.cjs.map\nvector.d.cts\nvector.d.ts\nvector.js\nvector.js.map\n---\n12:  precision: number | undefined;\n16:  constructor(name: string, precision?: number, scale?: number);\n20:  readonly precision: number | undefined;\n30:  precision: number | undefined;\n34:  constructor(name: string, precision?: number, scale?: number);\n38:  readonly precision: number | undefined;\n49:  precision: number | undefined;\n53:  constructor(name: string, precision?: number, scale?: number);\n57:  readonly precision: number | undefined;\n64:  precision: number;\n---\ncommon.d.ts:253:  references(ref: ReferenceConfig['ref'], config?: ReferenceConfig['config']): this;\ncommon.d.ts:257:  generatedAlwaysAs(as: SQL | (() => SQL)): SetHasGenerated<this>;\nuuid.d.ts:15:  defaultRandom(): ReturnType<this['default']>;\ntimestamp.d.ts:13:  withTimezone: boolean;\ntimestamp.d.ts:17:  constructor(name: string, withTimezone: boolean, precision: number | undefined);\ntimestamp.d.ts:21:  readonly withTimezone: boolean;\ntimestamp.d.ts:32:  withTimezone: boolean;\ntimestamp.d.ts:36:  constructor(name: string, withTimezone: boolean, precision: number | undefined);\ntimestamp.d.ts:40:  readonly withTimezone: boolean;\ntimestamp.d.ts:50:  withTimezone?: boolean;\n../../column-builder.d.ts:218:  abstract generatedAlwaysAs(as: SQL | T['data'] | (() => SQL), config?: Partial<GeneratedColumnConfig<unknown>>): HasGenerated<this, {\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "cd node_modules/drizzle-orm/pg-core/columns; cat custom.d.ts | grep -n -E \"customType|dataType|interface CustomTypeValues|data:|driverData\" | head -30; echo ---; cat vector_extension/vector.d.ts 2>/dev/null | tail -30; ls vector_extension 2>/dev/null; echo ---; grep -n -E \"export declare function numeric|mode|precision\" numeric.d.ts | head; echo ---; grep -n -E \"generatedAlwaysAs|references|defaultRandom|withTimezone|defaultNow\" common.d.ts uuid.d.ts timestamp.d.ts ../../column-builder.d.ts | head -30",
+            "time": {
+              "start": 1791657748804,
+              "end": 1791657748843
+            }
+          },
+          "id": "prt_1271f9b80001HJrXc52sNVD2Na",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f9171001iyJ2W7zngX2dnT"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-finish",
+          "tokens": {
+            "total": 113468,
+            "input": 2,
+            "output": 326,
+            "reasoning": 0,
+            "cache": {
+              "write": 1834,
+              "read": 111306
+            }
+          },
+          "cost": 0.0379592,
+          "id": "prt_1271fa9ab001nM7iNclW5533O7",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271f9171001iyJ2W7zngX2dnT"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.038901,
+        "tokens": {
+          "total": 115624,
+          "input": 2,
+          "output": 257,
+          "reasoning": 0,
+          "cache": {
+            "write": 2225,
+            "read": 113140
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657748970,
+          "completed": 1791657753980
+        },
+        "finish": "tool-calls",
+        "id": "msg_1271fa9ea001oYiN4awyU6RTrG",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-start",
+          "id": "prt_1271fb2bd001KdDzecWMivxZxZ",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fa9ea001oYiN4awyU6RTrG"
+        },
+        {
+          "type": "reasoning",
+          "text": "I need to verify where generatedAlwaysAs is defined on the column builder, and check how vector, numeric, pgTable, and customType are exported from pg-core's index.\n\n",
+          "time": {
+            "start": 1791657753007,
+            "end": 1791657753781
+          },
+          "metadata": {
+            "bedrock": {
+              "signature": "CAQS9AUKEggSEAEYAjgBQgh0aGlua2luZxIMAh0u6Y0G1o9W+8TnGgxlWQGq5hkfwHbBRhMiMCzKU9DlOMe+MpQh6mGF338D4Ils2kRDomOXKzvrD2sfRYa8hQdDdjD3ivFUcq2L4SqPBcldXFBNpIVRW03+/h68nSoUOPhUIKV6WYLB28g2HQqNhAYRMfSB9NSxJalz3YH4lar0BObj/06rP6h+k+YbqjS+oVI59IhjynqqCD1pNJxX4KHQSM24ca8X/0wlcQZiIfcYpeGvAQ0bJhAlWMP+7dy0DYLWEvwXYYT7Vyk7yQnZWJHNm72WvZwj+JBAYM30aqv6QO8//7ru9SxUNlihb1DZQGF2xR45FOV66PFB5IGKydjaCfp5bqBjDcCKrd7IxWVYCG+VZ23kOubymDBQqNCozMJbVH/wlvyNyh7qYmPrEjNOf1Uvl31/GXDXWyBxtzBH9P2h4V1e+qGJoKdDpG0qJjVom7eajLpr/SyVUFuvA7kTsR4uFkHYQxQGr8T0Lu9fjQ7V1lH7EF+yvp4NQXKtfy8U4rVWPpuB0F9hPjc2nx+j3pQV3sKEGwBVj2qoC5OUygVmXXaWFFFUziG9ECwJfhM2WmkBsJ7acgxa0Wh12C6N1Xvw75hPLNHgJ4XehLXC8iPP0E4CqSa77d4F/z+GYPsINe8/FJ+zX/uz2lJ7UqiBFc327oVoXqQIupUiz1FYcgfB9bIcg/7wepZsS9W1FeE/8sAqNk90jSajQRuY6zTB+yPQNP9tHh/i2hQIEmQaHjASRXSz1oN6DARKyc4GWWMI4Sk+AmSvp2OBqZnkENHWt8RFdC2TOd5iYKShN8U+mm6TJ7720f/9QPO5prD74KTgBYcFe6vnc9uVGxOnjciy9enNUfAJ/Ov9isebX/SkVfc4AbUAV0mi9i4Ghcl+leQfvCdLrt5bqwlGG2tqKYnGWYmRiYXRjhFi8Th9QcvyZLpFDMl3E0Xbxjec17eSBgVyOp5iniAJwSjbfR4YAQ=="
+            }
+          },
+          "id": "prt_1271fb9af001iyzLPGdeQWqKM0",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fa9ea001oYiN4awyU6RTrG"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "tooluse_d1eoMnK47eSNFQC4h9CQ83",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "cd node_modules/drizzle-orm/pg-core; sed -n 240,262p columns/common.d.ts; sed -n 60,90p columns/numeric.d.ts; grep -n \"vector\\|custom\" columns/index.d.ts index.d.ts | head",
+              "workdir": "/Users/itsmeyaw/projects/bmwow"
+            },
+            "output": "   * @example\n   * ```ts\n   * const t = pgTable('t', {\n   *   // 1D array: number[]\n   *   tags: integer().array(),\n   *   // Or explicitly: integer().array('[]')\n   *   // 2D array: number[][]\n   *   matrix: integer().array('[][]'),\n   * });\n   * ```\n   */\n  array(): SetDimensions<this, 1>;\n  array<TDim extends PgArrayDimensionString>(dimensions: TDim): SetDimensions<this, ArrayDimensionStringToNumber<TDim>>;\n  references(ref: ReferenceConfig['ref'], config?: ReferenceConfig['config']): this;\n  unique(name?: string, config?: {\n    nulls: 'distinct' | 'not distinct';\n  }): this;\n  generatedAlwaysAs(as: SQL | (() => SQL)): SetHasGenerated<this>;\n}\ndeclare abstract class PgColumn<out TColumnType extends ColumnType = any, out T extends PgColumnBaseConfig<TColumnType> = PgColumnBaseConfig<TColumnType>, out TRuntimeConfig extends object = {}> extends Column<T, TRuntimeConfig> {\n  static readonly [entityKind]: string;\n  readonly dimensions: PgArrayDimension;\n  constructor(table: PgTable, config: PgColumnBuilderRuntimeConfig<T['data']> & TRuntimeConfig);\n  mapToDriverValue: StringConstructor;\n  getSQLType(): string;\n}\ntype PgNumericConfig<T extends 'string' | 'number' | 'bigint' = 'string' | 'number' | 'bigint'> = {\n  precision: number;\n  scale?: number;\n  mode?: T;\n} | {\n  precision?: number;\n  scale: number;\n  mode?: T;\n} | {\n  precision?: number;\n  scale?: number;\n  mode: T;\n};\ndeclare function numeric<TMode extends 'string' | 'number' | 'bigint'>(config?: PgNumericConfig<TMode>): Equal<TMode, 'number'> extends true ? PgNumericNumberBuilder : Equal<TMode, 'bigint'> extends true ? PgNumericBigIntBuilder : PgNumericBuilder;\ndeclare function numeric<TMode extends 'string' | 'number' | 'bigint'>(name: string, config?: PgNumericConfig<TMode>): Equal<TMode, 'number'> extends true ? PgNumericNumberBuilder : Equal<TMode, 'bigint'> extends true ? PgNumericBigIntBuilder : PgNumericBuilder;\ndeclare const decimal: typeof numeric;\n//#endregion\nexport { PgNumeric, PgNumericBigInt, PgNumericBigIntBuilder, PgNumericBuilder, PgNumericConfig, PgNumericNumber, PgNumericNumberBuilder, decimal, numeric };\n//# sourceMappingURL=numeric.d.ts.mapcolumns/index.d.ts:6:import { ConvertCustomConfig, CustomTypeParams, CustomTypeValues, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, customType } from \"./custom.js\";\ncolumns/index.d.ts:30:import { PgBinaryVector, PgBinaryVectorBuilder, PgBinaryVectorConfig, bit } from \"./vector_extension/bit.js\";\ncolumns/index.d.ts:31:import { PgHalfVector, PgHalfVectorBuilder, PgHalfVectorConfig, halfvec } from \"./vector_extension/halfvec.js\";\ncolumns/index.d.ts:32:import { PgSparseVector, PgSparseVectorBuilder, PgSparseVectorConfig, sparsevec } from \"./vector_extension/sparsevec.js\";\ncolumns/index.d.ts:33:import { PgVector, PgVectorBuilder, PgVectorConfig, vector } from \"./vector_extension/vector.js\";\ncolumns/index.d.ts:36:export { AnyPgColumn, AnyPgColumnBuilder, ConvertCustomConfig, CustomTypeParams, CustomTypeValues, ExtraConfigColumn, HasIdentity, IndexedColumn, IndexedExtraConfigType, IntervalConfig, PgArrayDimension, PgBigInt53, PgBigInt53Builder, PgBigInt64, PgBigInt64Builder, PgBigIntConfig, PgBigIntString, PgBigIntStringBuilder, PgBigSerial53, PgBigSerial53Builder, PgBigSerial64, PgBigSerial64Builder, PgBigSerialConfig, PgBinaryVector, PgBinaryVectorBuilder, PgBinaryVectorConfig, PgBoolean, PgBooleanBuilder, PgBuildColumn, PgBuildColumns, PgBuildExtraConfigColumns, PgBytea, PgByteaBuilder, PgChar, PgCharBuilder, PgCharConfig, PgCidr, PgCidrBuilder, PgColumn, PgColumnBaseConfig, PgColumnBuilder, PgColumnBuilderConfig, PgColumnBuilderRuntimeConfig, PgColumns, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, PgDate, PgDateBuilder, PgDateConfig, PgDateString, PgDateStringBuilder, PgDoublePrecision, PgDoublePrecisionBuilder, PgEnum, PgEnumColumn, PgEnumColumnBuilder, PgEnumObject, PgEnumObjectColumn, PgEnumObjectColumnBuilder, PgGeometry, PgGeometryBuilder, PgGeometryConfig, PgGeometryObject, PgGeometryObjectBuilder, PgHalfVector, PgHalfVectorBuilder, PgHalfVectorConfig, PgInet, PgInetBuilder, PgInteger, PgIntegerBuilder, PgInterval, PgIntervalBuilder, PgJson, PgJsonBuilder, PgJsonb, PgJsonbBuilder, PgLineABC, PgLineABCBuilder, PgLineBuilder, PgLineTuple, PgLineTypeConfig, PgMacaddr, PgMacaddr8, PgMacaddr8Builder, PgMacaddrBuilder, PgNumeric, PgNumericBigInt, PgNumericBigIntBuilder, PgNumericBuilder, PgNumericConfig, PgNumericNumber, PgNumericNumberBuilder, PgPointConfig, PgPointObject, PgPointObjectBuilder, PgPointTuple, PgPointTupleBuilder, PgReal, PgRealBuilder, PgSerial, PgSerialBuilder, PgSmallInt, PgSmallIntBuilder, PgSmallSerial, PgSmallSerialBuilder, PgSparseVector, PgSparseVectorBuilder, PgSparseVectorConfig, PgText, PgTextBuilder, PgTextConfig, PgTime, PgTimeBuilder, PgTimestamp, PgTimestampBuilder, PgTimestampConfig, PgTimestampString, PgTimestampStringBuilder, PgUUID, PgUUIDBuilder, PgVarchar, PgVarcharBuilder, PgVarcharConfig, PgVector, PgVectorBuilder, PgVectorConfig, Precision, ReferenceConfig, ResolvePgColumnConfig, Set$Type, SetDimensions, SetHasDefault, SetHasGenerated, SetHasRuntimeDefault, SetIdentity, SetIsPrimaryKey, SetNotNull, TimeConfig, bigint, bigserial, bit, boolean, bytea, char, cidr, customType, date, decimal, doublePrecision, geometry, halfvec, inet, integer, interval, isPgEnum, json, jsonb, line, macaddr, macaddr8, numeric, pgEnum, point, real, serial, smallint, smallserial, sparsevec, text, time, timestamp, uuid, varchar, vector };\nindex.d.ts:10:import { ConvertCustomConfig, CustomTypeParams, CustomTypeValues, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, customType } from \"./columns/custom.js\";\nindex.d.ts:35:import { PgBinaryVector, PgBinaryVectorBuilder, PgBinaryVectorConfig, bit } from \"./columns/vector_extension/bit.js\";\nindex.d.ts:36:import { PgHalfVector, PgHalfVectorBuilder, PgHalfVectorConfig, halfvec } from \"./columns/vector_extension/halfvec.js\";\nindex.d.ts:37:import { PgSparseVector, PgSparseVectorBuilder, PgSparseVectorConfig, sparsevec } from \"./columns/vector_extension/sparsevec.js\";\n",
+            "metadata": {
+              "output": "   * @example\n   * ```ts\n   * const t = pgTable('t', {\n   *   // 1D array: number[]\n   *   tags: integer().array(),\n   *   // Or explicitly: integer().array('[]')\n   *   // 2D array: number[][]\n   *   matrix: integer().array('[][]'),\n   * });\n   * ```\n   */\n  array(): SetDimensions<this, 1>;\n  array<TDim extends PgArrayDimensionString>(dimensions: TDim): SetDimensions<this, ArrayDimensionStringToNumber<TDim>>;\n  references(ref: ReferenceConfig['ref'], config?: ReferenceConfig['config']): this;\n  unique(name?: string, config?: {\n    nulls: 'distinct' | 'not distinct';\n  }): this;\n  generatedAlwaysAs(as: SQL | (() => SQL)): SetHasGenerated<this>;\n}\ndeclare abstract class PgColumn<out TColumnType extends ColumnType = any, out T extends PgColumnBaseConfig<TColumnType> = PgColumnBaseConfig<TColumnType>, out TRuntimeConfig extends object = {}> extends Column<T, TRuntimeConfig> {\n  static readonly [entityKind]: string;\n  readonly dimensions: PgArrayDimension;\n  constructor(table: PgTable, config: PgColumnBuilderRuntimeConfig<T['data']> & TRuntimeConfig);\n  mapToDriverValue: StringConstructor;\n  getSQLType(): string;\n}\ntype PgNumericConfig<T extends 'string' | 'number' | 'bigint' = 'string' | 'number' | 'bigint'> = {\n  precision: number;\n  scale?: number;\n  mode?: T;\n} | {\n  precision?: number;\n  scale: number;\n  mode?: T;\n} | {\n  precision?: number;\n  scale?: number;\n  mode: T;\n};\ndeclare function numeric<TMode extends 'string' | 'number' | 'bigint'>(config?: PgNumericConfig<TMode>): Equal<TMode, 'number'> extends true ? PgNumericNumberBuilder : Equal<TMode, 'bigint'> extends true ? PgNumericBigIntBuilder : PgNumericBuilder;\ndeclare function numeric<TMode extends 'string' | 'number' | 'bigint'>(name: string, config?: PgNumericConfig<TMode>): Equal<TMode, 'number'> extends true ? PgNumericNumberBuilder : Equal<TMode, 'bigint'> extends true ? PgNumericBigIntBuilder : PgNumericBuilder;\ndeclare const decimal: typeof numeric;\n//#endregion\nexport { PgNumeric, PgNumericBigInt, PgNumericBigIntBuilder, PgNumericBuilder, PgNumericConfig, PgNumericNumber, PgNumericNumberBuilder, decimal, numeric };\n//# sourceMappingURL=numeric.d.ts.mapcolumns/index.d.ts:6:import { ConvertCustomConfig, CustomTypeParams, CustomTypeValues, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, customType } from \"./custom.js\";\ncolumns/index.d.ts:30:import { PgBinaryVector, PgBinaryVectorBuilder, PgBinaryVectorConfig, bit } from \"./vector_extension/bit.js\";\ncolumns/index.d.ts:31:import { PgHalfVector, PgHalfVectorBuilder, PgHalfVectorConfig, halfvec } from \"./vector_extension/halfvec.js\";\ncolumns/index.d.ts:32:import { PgSparseVector, PgSparseVectorBuilder, PgSparseVectorConfig, sparsevec } from \"./vector_extension/sparsevec.js\";\ncolumns/index.d.ts:33:import { PgVector, PgVectorBuilder, PgVectorConfig, vector } from \"./vector_extension/vector.js\";\ncolumns/index.d.ts:36:export { AnyPgColumn, AnyPgColumnBuilder, ConvertCustomConfig, CustomTypeParams, CustomTypeValues, ExtraConfigColumn, HasIdentity, IndexedColumn, IndexedExtraConfigType, IntervalConfig, PgArrayDimension, PgBigInt53, PgBigInt53Builder, PgBigInt64, PgBigInt64Builder, PgBigIntConfig, PgBigIntString, PgBigIntStringBuilder, PgBigSerial53, PgBigSerial53Builder, PgBigSerial64, PgBigSerial64Builder, PgBigSerialConfig, PgBinaryVector, PgBinaryVectorBuilder, PgBinaryVectorConfig, PgBoolean, PgBooleanBuilder, PgBuildColumn, PgBuildColumns, PgBuildExtraConfigColumns, PgBytea, PgByteaBuilder, PgChar, PgCharBuilder, PgCharConfig, PgCidr, PgCidrBuilder, PgColumn, PgColumnBaseConfig, PgColumnBuilder, PgColumnBuilderConfig, PgColumnBuilderRuntimeConfig, PgColumns, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, PgDate, PgDateBuilder, PgDateConfig, PgDateString, PgDateStringBuilder, PgDoublePrecision, PgDoublePrecisionBuilder, PgEnum, PgEnumColumn, PgEnumColumnBuilder, PgEnumObject, PgEnumObjectColumn, PgEnumObjectColumnBuilder, PgGeometry, PgGeometryBuilder, PgGeometryConfig, PgGeometryObject, PgGeometryObjectBuilder, PgHalfVector, PgHalfVectorBuilder, PgHalfVectorConfig, PgInet, PgInetBuilder, PgInteger, PgIntegerBuilder, PgInterval, PgIntervalBuilder, PgJson, PgJsonBuilder, PgJsonb, PgJsonbBuilder, PgLineABC, PgLineABCBuilder, PgLineBuilder, PgLineTuple, PgLineTypeConfig, PgMacaddr, PgMacaddr8, PgMacaddr8Builder, PgMacaddrBuilder, PgNumeric, PgNumericBigInt, PgNumericBigIntBuilder, PgNumericBuilder, PgNumericConfig, PgNumericNumber, PgNumericNumberBuilder, PgPointConfig, PgPointObject, PgPointObjectBuilder, PgPointTuple, PgPointTupleBuilder, PgReal, PgRealBuilder, PgSerial, PgSerialBuilder, PgSmallInt, PgSmallIntBuilder, PgSmallSerial, PgSmallSerialBuilder, PgSparseVector, PgSparseVectorBuilder, PgSparseVectorConfig, PgText, PgTextBuilder, PgTextConfig, PgTime, PgTimeBuilder, PgTimestamp, PgTimestampBuilder, PgTimestampConfig, PgTimestampString, PgTimestampStringBuilder, PgUUID, PgUUIDBuilder, PgVarchar, PgVarcharBuilder, PgVarcharConfig, PgVector, PgVectorBuilder, PgVectorConfig, Precision, ReferenceConfig, ResolvePgColumnConfig, Set$Type, SetDimensions, SetHasDefault, SetHasGenerated, SetHasRuntimeDefault, SetIdentity, SetIsPrimaryKey, SetNotNull, TimeConfig, bigint, bigserial, bit, boolean, bytea, char, cidr, customType, date, decimal, doublePrecision, geometry, halfvec, inet, integer, interval, isPgEnum, json, jsonb, line, macaddr, macaddr8, numeric, pgEnum, point, real, serial, smallint, smallserial, sparsevec, text, time, timestamp, uuid, varchar, vector };\nindex.d.ts:10:import { ConvertCustomConfig, CustomTypeParams, CustomTypeValues, PgCustomColumn, PgCustomColumnBuilder, PgCustomColumnInnerConfig, customType } from \"./columns/custom.js\";\nindex.d.ts:35:import { PgBinaryVector, PgBinaryVectorBuilder, PgBinaryVectorConfig, bit } from \"./columns/vector_extension/bit.js\";\nindex.d.ts:36:import { PgHalfVector, PgHalfVectorBuilder, PgHalfVectorConfig, halfvec } from \"./columns/vector_extension/halfvec.js\";\nindex.d.ts:37:import { PgSparseVector, PgSparseVectorBuilder, PgSparseVectorConfig, sparsevec } from \"./columns/vector_extension/sparsevec.js\";\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "cd node_modules/drizzle-orm/pg-core; sed -n 240,262p columns/common.d.ts; sed -n 60,90p columns/numeric.d.ts; grep -n \"vector\\|custom\" columns/index.d.ts index.d.ts | head",
+            "time": {
+              "start": 1791657753834,
+              "end": 1791657753861
+            }
+          },
+          "id": "prt_1271fbcb6001YsZj7Bse2vrQ0O",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fa9ea001oYiN4awyU6RTrG"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-finish",
+          "tokens": {
+            "total": 115624,
+            "input": 2,
+            "output": 257,
+            "reasoning": 0,
+            "cache": {
+              "write": 2225,
+              "read": 113140
+            }
+          },
+          "cost": 0.038901,
+          "id": "prt_1271fbd43001Hvpl9nvtarolvr",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fa9ea001oYiN4awyU6RTrG"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.068896,
+        "tokens": {
+          "total": 120240,
+          "input": 2,
+          "output": 1430,
+          "reasoning": 0,
+          "cache": {
+            "write": 3443,
+            "read": 115365
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657753982,
+          "completed": 1791657770990
+        },
+        "finish": "tool-calls",
+        "id": "msg_1271fbd7e0017JyckWumSw7AS7",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "type": "step-start",
+          "id": "prt_1271fc7730012400tb9labeI3f",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fbd7e0017JyckWumSw7AS7"
+        },
+        {
+          "type": "reasoning",
+          "text": "I'll define the schema with a custom type containing a string data field, keeping the column order aligned with the DDL so it mirrors exactly.\n\n",
+          "time": {
+            "start": 1791657758403,
+            "end": 1791657759024
+          },
+          "metadata": {
+            "bedrock": {
+              "signature": "CAQSvQUKEggSEAEYAjgBQgh0aGlua2luZxIMEIdypbULbZeRHrTTGgxpQKjsE2vteSWATmYiMFckyVMXIlXGXjo1Sk5Gs/bR7EhF3oYnw9VBfl6TWbYsSGFwbXzXlApt9RlwKYoRoSrYBLyXQHLwy5FO7kFJ1EC1q752wQQ1GvCxnwP17YfFaDph9VLqFJ0qsgEAVbhAuQsGtnj2CgOmTWYddQX1GGJkSB+IcwEQBj3I0fBhbl/GmG+ziz06QJip7X+GzutSHFnNebawGtGUsbNuHBXyfUqWTzSAoDkuv2nR3RUKqqT7NZWnZ0f96ZCp0VZCubhpjWl8jJLJdl4JxaHVQAcIUG7tZTIUBmwTxA2u7RmJ0WGS2ZsT3Boe5PVhfmTfJ9DMqYS4wH/K+suYeK2PVfkyQnjE7AfHcjmz9rS7imXA1LdoGmDriuVFLanNzBReQDwEfIzKcnxZifgv4KqKxFdz0a5piML0D1g2KCtln4MASMXXc6/rr26yhcRxpYo6SuzCrNIJuPyXPO0L0oH71swwdeJyfl/IregimDhJxf0A0Qf/mVNK8VYmLmGb3IDUqf5yFUeZB5JNdT1BFiClB9X5WmdGxHtQEudY9XkRrEKbqBJSmB/kAV1C6stRHfPQ2ZL7N/C17dnxwfrrSS+nOAZ1TV1IsrIp3E5OZAFFIMgih5CRtu81uTXiNfe6WD6JtbWusmAZyMP96iIBjot5q/ZZoHLXLD2XCh7Pg6RLfhxdC9M8CuIVrbAnkGgFPbLS7hPz0YtaS8Y7nym84/XiEouvPLkLENoyf+tn/22XHvqPr+4SnxOiuW+XFvPSlke8Yo4uTrwtGCp1YVPIfq0JUmAZO1vKVL70ut3u7H7GLhm79xkMNj1Uf8ayPrSIja5e6/CjWJWEQlGAoO3Un+8BvLtvHSLtv4SxnqI7FLeOeRgB"
+            }
+          },
+          "id": "prt_1271fcec3001eA3vdU0vWzNfBj",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fbd7e0017JyckWumSw7AS7"
+        },
+        {
+          "type": "tool",
+          "tool": "write",
+          "callID": "tooluse_66yLFdiNVRc4X29VXhvuJQ",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/bmwow/src/db/schema.ts",
+              "content": "// Mirrors migrations/0000_init.sql (DDL is the source of truth for indexes/constraints).\nimport { sql } from \"drizzle-orm\";\nimport { customType, numeric, pgTable, text, timestamp, uuid, vector } from \"drizzle-orm/pg-core\";\n\nconst tsvector = customType<{ data: string }>({\n  dataType: () => \"tsvector\",\n});\n\nexport const feedbackEntries = pgTable(\"feedback_entries\", {\n  id: uuid(\"id\").primaryKey().defaultRandom(),\n  feedbackExplorerId: text(\"feedback_explorer_id\").notNull().unique(),\n  source: text(\"source\"),\n  brand: text(\"brand\"),\n  salesDescription: text(\"sales_description\"),\n  country: text(\"country\"),\n  derivateCode: text(\"derivate_code\"),\n  engineType: text(\"engine_type\"),\n  rawFeedback: text(\"raw_feedback\").notNull(),\n  embedding: vector(\"embedding\", { dimensions: 1536 }),\n  searchTsv: tsvector(\"search_tsv\").generatedAlwaysAs(sql`to_tsvector('english', raw_feedback)`),\n  createdAt: timestamp(\"created_at\", { withTimezone: true }).notNull().defaultNow(),\n});\n\nexport const feedbackAspects = pgTable(\"feedback_aspects\", {\n  id: uuid(\"id\").primaryKey().defaultRandom(),\n  feedbackEntryId: uuid(\"feedback_entry_id\")\n    .notNull()\n    .references(() => feedbackEntries.id, { onDelete: \"cascade\" }),\n  feedbackType: text(\"feedback_type\"),\n  vfcCategory: text(\"vfc_category\").notNull(),\n  aspectTerm: text(\"aspect_term\"),\n  aspectLabelRaw: text(\"aspect_label_raw\"),\n  issueType: text(\"issue_type\").notNull(),\n  quoteSnippet: text(\"quote_snippet\"),\n  sentiment: text(\"sentiment\").notNull(),\n  sentimentScore: numeric(\"sentiment_score\", { precision: 3, scale: 2 }),\n  extractionSource: text(\"extraction_source\").notNull(),\n  createdAt: timestamp(\"created_at\", { withTimezone: true }).notNull().defaultNow(),\n});\n\nexport type NewFeedbackEntry = typeof feedbackEntries.$inferInsert;\nexport type NewFeedbackAspect = typeof feedbackAspects.$inferInsert;\n"
+            },
+            "output": "Wrote file successfully.",
+            "metadata": {
+              "diagnostics": {
+                "/Users/itsmeyaw/projects/bmwow/scripts/preprocess.ts": [],
+                "/Users/itsmeyaw/projects/bmwow/src/db/schema.ts": []
+              },
+              "filepath": "/Users/itsmeyaw/projects/bmwow/src/db/schema.ts",
+              "exists": false,
+              "truncated": false
+            },
+            "title": "src/db/schema.ts",
+            "time": {
+              "start": 1791657766821,
+              "end": 1791657768387
+            }
+          },
+          "id": "prt_1271fd132001lbcBUTUgNbPvyb",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fbd7e0017JyckWumSw7AS7"
+        },
+        {
+          "type": "tool",
+          "tool": "write",
+          "callID": "tooluse_pgI9kE3Q0cYQmNB00VrM7J",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/Users/itsmeyaw/projects/bmwow/src/db/__schema_check.ts",
+              "content": "import type { NewFeedbackAspect, NewFeedbackEntry } from \"./schema\";\n\nexport const e: NewFeedbackEntry = {\n  feedbackExplorerId: \"x\",\n  rawFeedback: \"y\",\n  embedding: [0.1, 0.2],\n};\nexport const bad: NewFeedbackEntry = {\n  feedbackExplorerId: \"x\",\n  rawFeedback: \"y\",\n  // @ts-expect-error generated column not insertable\n  searchTsv: \"z\",\n};\nexport const a: NewFeedbackAspect = {\n  feedbackEntryId: \"00000000-0000-0000-0000-000000000000\",\n  vfcCategory: \"c\",\n  issueType: \"i\",\n  sentiment: \"Negative\",\n  extractionSource: \"llm\",\n  sentimentScore: \"-0.90\",\n};\n// @ts-expect-error vfcCategory required\nexport const missing: NewFeedbackAspect = { feedbackEntryId: \"x\", issueType: \"i\", sentiment: \"s\", extractionSource: \"llm\" };\n"
+            },
+            "output": "Wrote file successfully.",
+            "metadata": {
+              "diagnostics": {
+                "/Users/itsmeyaw/projects/bmwow/scripts/preprocess.ts": [],
+                "/Users/itsmeyaw/projects/bmwow/src/db/schema.ts": [],
+                "/Users/itsmeyaw/projects/bmwow/src/db/__schema_check.ts": []
+              },
+              "filepath": "/Users/itsmeyaw/projects/bmwow/src/db/__schema_check.ts",
+              "exists": false,
+              "truncated": false
+            },
+            "title": "src/db/__schema_check.ts",
+            "time": {
+              "start": 1791657770038,
+              "end": 1791657770653
+            }
+          },
+          "id": "prt_1271fefa8001Z9HUVqlKwdyp5W",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fbd7e0017JyckWumSw7AS7"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "8e911b1d1596547e6f0fe85264277fc01560113c",
+          "type": "step-finish",
+          "tokens": {
+            "total": 120240,
+            "input": 2,
+            "output": 1430,
+            "reasoning": 0,
+            "cache": {
+              "write": 3443,
+              "read": 115365
+            }
+          },
+          "cost": 0.068896,
+          "id": "prt_1271fff3c001tZb7vcSl9AgFAB",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fbd7e0017JyckWumSw7AS7"
+        },
+        {
+          "type": "patch",
+          "hash": "07b32000c801a9ff676f50655a84e2a9da419201",
+          "files": [
+            "/Users/itsmeyaw/projects/bmwow/src/db/__schema_check.ts",
+            "/Users/itsmeyaw/projects/bmwow/src/db/schema.ts"
+          ],
+          "id": "prt_1271fffeb00192EgOMZ1KjrAdb",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271fbd7e0017JyckWumSw7AS7"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.0335496,
+        "tokens": {
+          "total": 120424,
+          "input": 2,
+          "output": 114,
+          "reasoning": 0,
+          "cache": {
+            "write": 1500,
+            "read": 118808
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657770993,
+          "completed": 1791657780585
+        },
+        "finish": "tool-calls",
+        "id": "msg_1271ffff1001JN6os0Q6sMnw8O",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "8e911b1d1596547e6f0fe85264277fc01560113c",
+          "type": "step-start",
+          "id": "prt_127200ea1001NuSs7fAADgNu0r",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271ffff1001JN6os0Q6sMnw8O"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "tooluse_CnR2nL49MEj02vNWlyeXAc",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "pnpm exec tsc --noEmit -p . ; echo EXIT=$?",
+              "workdir": "/Users/itsmeyaw/projects/bmwow"
+            },
+            "output": "EXIT=0\n",
+            "metadata": {
+              "output": "EXIT=0\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "pnpm exec tsc --noEmit -p . ; echo EXIT=$?",
+            "time": {
+              "start": 1791657775808,
+              "end": 1791657780367
+            }
+          },
+          "id": "prt_127200ea5001T6cMidG69UxbWH",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271ffff1001JN6os0Q6sMnw8O"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "8e911b1d1596547e6f0fe85264277fc01560113c",
+          "type": "step-finish",
+          "tokens": {
+            "total": 120424,
+            "input": 2,
+            "output": 114,
+            "reasoning": 0,
+            "cache": {
+              "write": 1500,
+              "read": 118808
+            }
+          },
+          "cost": 0.0335496,
+          "id": "prt_1272024cb0010Hk6OrUwEIQbIb",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_1271ffff1001JN6os0Q6sMnw8O"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.0286396,
+        "tokens": {
+          "total": 120633,
+          "input": 2,
+          "output": 197,
+          "reasoning": 0,
+          "cache": {
+            "write": 126,
+            "read": 120308
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657780588,
+          "completed": 1791657786334
+        },
+        "finish": "tool-calls",
+        "id": "msg_12720256c001RhxU8x27RXQtnZ",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "8e911b1d1596547e6f0fe85264277fc01560113c",
+          "type": "step-start",
+          "id": "prt_127202dfe001xVFUA9Wjb4xZgw",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_12720256c001RhxU8x27RXQtnZ"
+        },
+        {
+          "type": "reasoning",
+          "text": "Good, that looks clean. I'm verifying the @ts-expect-error for searchTsv is meaningful—it passed because an actual error existed there, confirming the check works as intended rather than silently exiting fine when it shouldn't.\n\n",
+          "time": {
+            "start": 1791657784980,
+            "end": 1791657786043
+          },
+          "metadata": {
+            "bedrock": {
+              "signature": "CAQSvwYKEggSEAEYAjgBQgh0aGlua2luZxIMNC0uDExVCGD7rm8iGgz5N4KWDWqhyskbsB0iMHZTVHtQYvSvogJR91NSL30UQHljhqyGSxkP9ScTZ4t8TxNhd3cbRGAxcftAz1XclCraBeszT1G0aoPkLbUlnAIwBc3wd4aZfHgngV47gI8QSQzNX9HXRTSHJca24HumvnjLXGJqzszn/F5ds81MF3KlLO+2NpDsh3Ien/GsweQ9umOs2C9eH5FNGFNXSA8ltMvXgqFKXX1lk7+ZLnr6ZS/nKG3mg8lXZ6vBx1jzIA2HVVKX/ZUh9Bv628NuDBKREM0D/IU4ccfIImVTxhMaQf9TCTv5/nADvLxbl45OmSVThJzsfUnbD31b5T6tshuhUpHprq8sKZzDp4SFka9cX9+rqKjX8sDclRRlhwryHtfJXeCmm4wvB9s24RJTa9B+LSzKGApnnImRwRCCd8tPyHv471v6Tj0+N0DqoK3Ewbfo5DS9qxTKuT60i9TUBiaiJZwa3kUTBjigRVrjOhkF4CyEaE7v1qcNeBbek8GqsOOfJM2S223dPc2TO21GZvX1ZY+IfcerXP3mdsHfEY74f4FZBJ7+d7CrPPWdhgAF9LF36Lv9bjlJWeV7iC8K+eUhjW3b4k7kmSpoD762Ry/ya+Xoy1aLIDMEa2epxNETmwROwrLZyvMtnEmft/8iwm0mI0mM4JZ9a6gu3UqYiEE7GsoUub2MqhrCYlz4lykSyq9Fa6+qDP/c1z7w+N33eB3dCD8A9DCcSjL/P1gfB+BM2/P32Kh9UrJZuGxvP3C4ZcUNuWtZd7+g9bH477bprW/6yyyg0FGOLJkZMCw4pfWdr4SLyF6QcQLGn4Z90rNQd23h76ddlsp7oEtgCXhqxJcKMfWiU7AtEd4dBlwf1ySUvwFJ3HnfG8T/T1qYoWgiqH992l7cfGpwUQn3wXHLxRQsxjstTh96BrhWXcwOR/AolJZ2qPYrCKuN4TozaiVMY4cdG48LWLKmVLA1sHL/dcs2psBi6maAw1m2nCPxssQCVSpYfV7SSa+tyTDMiT48H+l83LRTQOPxCaYl9pW1MLJGSMrxaAgzvGA2yJR+N/oYAQ=="
+            }
+          },
+          "id": "prt_127203694001fPAymIahoJZX6W",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_12720256c001RhxU8x27RXQtnZ"
+        },
+        {
+          "type": "tool",
+          "tool": "bash",
+          "callID": "tooluse_aLqrh6PKih5R0Pt6KGWzWR",
+          "state": {
+            "status": "completed",
+            "input": {
+              "command": "rm src/db/__schema_check.ts && git status --short",
+              "workdir": "/Users/itsmeyaw/projects/bmwow"
+            },
+            "output": " M .gitignore\n M opencode.json\n M package.json\n M pnpm-lock.yaml\n D scripts/prepare_data.ts\n?? .codex/config.toml\n?? .cursor/mcp.json\n?? .mcp.json\n?? docs/\n?? migrations/\n?? scripts/preprocess.ts\n?? src/db/\n",
+            "metadata": {
+              "output": " M .gitignore\n M opencode.json\n M package.json\n M pnpm-lock.yaml\n D scripts/prepare_data.ts\n?? .codex/config.toml\n?? .cursor/mcp.json\n?? .mcp.json\n?? docs/\n?? migrations/\n?? scripts/preprocess.ts\n?? src/db/\n",
+              "exit": 0,
+              "truncated": false
+            },
+            "title": "rm src/db/__schema_check.ts && git status --short",
+            "time": {
+              "start": 1791657786093,
+              "end": 1791657786132
+            }
+          },
+          "id": "prt_127203abd001tEHs9KVbFh93eB",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_12720256c001RhxU8x27RXQtnZ"
+        },
+        {
+          "reason": "tool-calls",
+          "snapshot": "5e0d88dfc856ada42eb52ce7931b1c2394c9c559",
+          "type": "step-finish",
+          "tokens": {
+            "total": 120633,
+            "input": 2,
+            "output": 197,
+            "reasoning": 0,
+            "cache": {
+              "write": 126,
+              "read": 120308
+            }
+          },
+          "cost": 0.0286396,
+          "id": "prt_127203b92001dXz5hkJiwdKuZc",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_12720256c001RhxU8x27RXQtnZ"
+        },
+        {
+          "type": "patch",
+          "hash": "8e911b1d1596547e6f0fe85264277fc01560113c",
+          "files": [
+            "/Users/itsmeyaw/projects/bmwow/src/db/__schema_check.ts"
+          ],
+          "id": "prt_127203bdd001h7WflekNmZUY88",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_12720256c001RhxU8x27RXQtnZ"
+        }
+      ]
+    },
+    {
+      "info": {
+        "parentID": "msg_1271f5fc0001ZVgOO2YN7MxzTL",
+        "role": "assistant",
+        "mode": "general",
+        "agent": "general",
+        "variant": "high",
+        "path": {
+          "cwd": "/Users/itsmeyaw/projects/bmwow",
+          "root": "/Users/itsmeyaw/projects/bmwow"
+        },
+        "cost": 0.0512548,
+        "tokens": {
+          "total": 122034,
+          "input": 2,
+          "output": 1278,
+          "reasoning": 0,
+          "cache": {
+            "write": 320,
+            "read": 120434
+          }
+        },
+        "modelID": "anthropic.claude-opus-5-5",
+        "providerID": "amazon-bedrock",
+        "time": {
+          "created": 1791657786336,
+          "completed": 1791657803694
+        },
+        "finish": "stop",
+        "id": "msg_127203be0001DgvuxOGszajRXS",
+        "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ"
+      },
+      "parts": [
+        {
+          "snapshot": "5e0d88dfc856ada42eb52ce7931b1c2394c9c559",
+          "type": "step-start",
+          "id": "prt_1272057f80017ZISJ3JB0AMefj",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_127203be0001DgvuxOGszajRXS"
+        },
+        {
+          "type": "reasoning",
+          "text": "The other modifications already there aren't mine to worry about, so I'm done with this part.\n\n",
+          "time": {
+            "start": 1791657794535,
+            "end": 1791657799393
+          },
+          "metadata": {
+            "bedrock": {
+              "signature": "CAQSgAUKEggSEAEYAjgBQgh0aGlua2luZxIMZH3dNvazf7I55R5nGgzPNvUFdUlI+ad2SB8iMNzqAlfFEHgGhzjf7Z5Dj+fO2DKsSGgAoJUNsmfcKLxS5nKkqM7Z3nlC6j4xmnX9ZSqbBGqqPFRvcoYWOvqPKV9Z6wwiOzMFp3oVjwjbylpzJBIqq7GGFbRVXOL++iMsjDA2w4INTohYSGU66UMxujTCAbpRk8GEDceCZ7h28sDBPkMw8iD8rTF9j3f58uQu10FuP0sSoDyV0jz8J7Tl+Phuty2Dd295Y48vRr13ixHLUISb8fj3Dz2bAuFZ170KdAMVJpOAAtp6DFrPwsXvCp5BmK/mmn+4gxjPWbrHSzPu29t1IRTIWFNIKGcbG3S5WJPedMHsWmG4tRoEfHj0gANvf6qLFrh3/72VLvcCJlZI23LjS7+92Ysa+/wrSWLgyY4bLehqkY0IvD1/rkWNM64NGAU2plxCXs7c3uhhG+dEZdayueec5bMOIPJc+Ez6M1nwf+zXn+SGErQpjYHqZaRbil62KJ1zOveFc6y8lKya5B4prYsvKRmEXl6CCpzFHNXO5gdttOOW/wsu+6SQi63eIFfFILsawoFMSJdLarqZ9QOq0q6Xx3VeoXIL6tAaFEbjsBiLRE+DfJkHyHqTlhIBs69feD/UnjC7wwPHi4IoAP4Mp80q43CZzukAMDt/p6sCmjZxoF8M2R1Ev6gaUhRpbS3PPB5RstyVw25zj+63afDWDMEfyW/WOg18tAEeuEzAWDWdgzuP/o+nWxoA1uCagP/H8ykDaaet+ltySbT7oj86ewv/H3wab2Ex73XDarv/bGUUVOmkRFq0xPFqGAE="
+            }
+          },
+          "id": "prt_127205be7001fOqud6WFFWREd2",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_127203be0001DgvuxOGszajRXS"
+        },
+        {
+          "type": "text",
+          "text": "I created `src/db/schema.ts` with every export and key you specified, and `tsc` passes with no errors.\n\n**`src/db/schema.ts`**\n```ts\n// Mirrors migrations/0000_init.sql (DDL is the source of truth for indexes/constraints).\nimport { sql } from \"drizzle-orm\";\nimport { customType, numeric, pgTable, text, timestamp, uuid, vector } from \"drizzle-orm/pg-core\";\n\nconst tsvector = customType<{ data: string }>({\n  dataType: () => \"tsvector\",\n});\n\nexport const feedbackEntries = pgTable(\"feedback_entries\", {\n  id: uuid(\"id\").primaryKey().defaultRandom(),\n  feedbackExplorerId: text(\"feedback_explorer_id\").notNull().unique(),\n  source: text(\"source\"),\n  brand: text(\"brand\"),\n  salesDescription: text(\"sales_description\"),\n  country: text(\"country\"),\n  derivateCode: text(\"derivate_code\"),\n  engineType: text(\"engine_type\"),\n  rawFeedback: text(\"raw_feedback\").notNull(),\n  embedding: vector(\"embedding\", { dimensions: 1536 }),\n  searchTsv: tsvector(\"search_tsv\").generatedAlwaysAs(sql`to_tsvector('english', raw_feedback)`),\n  createdAt: timestamp(\"created_at\", { withTimezone: true }).notNull().defaultNow(),\n});\n\nexport const feedbackAspects = pgTable(\"feedback_aspects\", {\n  id: uuid(\"id\").primaryKey().defaultRandom(),\n  feedbackEntryId: uuid(\"feedback_entry_id\")\n    .notNull()\n    .references(() => feedbackEntries.id, { onDelete: \"cascade\" }),\n  feedbackType: text(\"feedback_type\"),\n  vfcCategory: text(\"vfc_category\").notNull(),\n  aspectTerm: text(\"aspect_term\"),\n  aspectLabelRaw: text(\"aspect_label_raw\"),\n  issueType: text(\"issue_type\").notNull(),\n  quoteSnippet: text(\"quote_snippet\"),\n  sentiment: text(\"sentiment\").notNull(),\n  sentimentScore: numeric(\"sentiment_score\", { precision: 3, scale: 2 }),\n  extractionSource: text(\"extraction_source\").notNull(),\n  createdAt: timestamp(\"created_at\", { withTimezone: true }).notNull().defaultNow(),\n});\n\nexport type NewFeedbackEntry = typeof feedbackEntries.$inferInsert;\nexport type NewFeedbackAspect = typeof feedbackAspects.$inferInsert;\n```\n\n**Checking the API:** I confirmed each function against the rc.4 `.d.ts` files:\n- `vector` is exported from `drizzle-orm/pg-core` and its data type is `number[]`.\n- `numeric` defaults to string mode.\n- `generatedAlwaysAs` is defined on the base column builder, so it works on the custom `tsvector` column.\n\n**tsc result:** `pnpm exec tsc --noEmit -p .` exited 0 with no errors anywhere in the project. The throwaway check file `src/db/__schema_check.ts` was included in that run. It confirmed:\n- (a) `embedding: [0.1, 0.2]` is accepted.\n- (b) `searchTsv` is not an allowed insert key: the `@ts-expect-error` line was used, so TypeScript did reject the key.\n- (c) `sentimentScore: \"-0.90\"` is accepted.\n- An aspect insert missing `vfcCategory` is rejected.\n\nI deleted the check file afterwards. `src/db/schema.ts` is the only file I added. The other changed files in `git status` were already there before I started.",
+          "time": {
+            "start": 1791657799395,
+            "end": 1791657803304
+          },
+          "id": "prt_127206ee3001QOeclnIBit4Hfh",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_127203be0001DgvuxOGszajRXS"
+        },
+        {
+          "reason": "stop",
+          "snapshot": "5e0d88dfc856ada42eb52ce7931b1c2394c9c559",
+          "type": "step-finish",
+          "tokens": {
+            "total": 122034,
+            "input": 2,
+            "output": 1278,
+            "reasoning": 0,
+            "cache": {
+              "write": 320,
+              "read": 120434
+            }
+          },
+          "cost": 0.0512548,
+          "id": "prt_127207e83001bKHzTjpqhO8l41",
+          "sessionID": "ses_ed8e0a04cffecY8HJ75Js023wQ",
+          "messageID": "msg_127203be0001DgvuxOGszajRXS"
+        }
+      ]
+    }
+  ]
+}
