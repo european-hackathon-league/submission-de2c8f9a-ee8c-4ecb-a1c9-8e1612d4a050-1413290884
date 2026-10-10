@@ -3,7 +3,7 @@
   "checkpoint_id": "01M4KTRH9RR7A9XVXZV4FVA7BY",
   "strategy": "manual-commit",
   "branch": "chore/tidy-layout",
-  "checkpoints_count": 11,
+  "checkpoints_count": 12,
   "files_touched": [
     "AGENTS.md",
     "README.md",
@@ -54,6 +54,13 @@
       "transcript": "/5/full.jsonl",
       "compact_transcript": "/5/transcript.jsonl",
       "content_hash": "/5/content_hash.txt",
+      "prompt": ""
+    },
+    {
+      "metadata": "/6/metadata.json",
+      "transcript": "/6/full.jsonl",
+      "compact_transcript": "/6/transcript.jsonl",
+      "content_hash": "/6/content_hash.txt",
       "prompt": ""
     }
   ],
