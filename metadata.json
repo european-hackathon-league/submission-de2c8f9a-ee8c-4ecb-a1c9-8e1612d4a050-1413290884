@@ -3,9 +3,10 @@
   "checkpoint_id": "01M4KVW2JFZSTVW1J91VM8GTW5",
   "strategy": "manual-commit",
   "branch": "chore/worktrees-in-repo",
-  "checkpoints_count": 9,
+  "checkpoints_count": 10,
   "files_touched": [
-    ".gitignore"
+    ".gitignore",
+    "AGENTS.md"
   ],
   "sessions": [
     {
@@ -48,6 +49,13 @@
       "transcript": "/5/full.jsonl",
       "compact_transcript": "/5/transcript.jsonl",
       "content_hash": "/5/content_hash.txt",
+      "prompt": ""
+    },
+    {
+      "metadata": "/6/metadata.json",
+      "transcript": "/6/full.jsonl",
+      "compact_transcript": "/6/transcript.jsonl",
+      "content_hash": "/6/content_hash.txt",
       "prompt": ""
     }
   ],
