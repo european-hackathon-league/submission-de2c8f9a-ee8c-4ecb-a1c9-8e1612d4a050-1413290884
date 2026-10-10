@@ -3,7 +3,7 @@
   "checkpoint_id": "01M4KTCW3CSWW9ZEJ4BA1647EN",
   "strategy": "manual-commit",
   "branch": "chore/tidy-layout",
-  "checkpoints_count": 4,
+  "checkpoints_count": 5,
   "files_touched": [
     "python/bmwow/agent/SPEC.md",
     "python/bmwow/agent/models/evidence.py",
@@ -69,6 +69,13 @@
       "transcript": "/3/full.jsonl",
       "compact_transcript": "/3/transcript.jsonl",
       "content_hash": "/3/content_hash.txt",
+      "prompt": ""
+    },
+    {
+      "metadata": "/4/metadata.json",
+      "transcript": "/4/full.jsonl",
+      "compact_transcript": "/4/transcript.jsonl",
+      "content_hash": "/4/content_hash.txt",
       "prompt": ""
     }
   ],
