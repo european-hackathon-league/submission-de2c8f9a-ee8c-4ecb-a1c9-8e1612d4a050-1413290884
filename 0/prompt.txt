@@ -1,0 +1,13 @@
+ok, it's no problem right to use cursor and codex at the same time
+
+---
+
+should i add hooks to gitignore?
+
+---
+
+the hooks are for entire?
+
+---
+
+add raw_data to gitignore
