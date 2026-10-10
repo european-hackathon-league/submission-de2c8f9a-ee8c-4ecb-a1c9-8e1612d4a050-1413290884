@@ -1,0 +1,229 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KN0NBBZBW7N0FNDGVVNAGT",
+  "session_id": "ses_ed97ec5ebffejzBwJF1VkA26nl",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T19:35:44.597824Z",
+  "branch": "main",
+  "checkpoints_count": 14,
+  "save_step_count": 14,
+  "files_touched": [
+    ".mcp.json"
+  ],
+  "agent": "OpenCode",
+  "model": "anthropic.claude-opus-5-5",
+  "turn_id": "3e7a15765ddc",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 128,
+    "cache_creation_tokens": 1511109,
+    "cache_read_tokens": 7258119,
+    "output_tokens": 85124,
+    "api_call_count": 60
+  },
+  "session_metrics": {
+    "turn_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T19:35:44.55058Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 180,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 180,
+    "total_lines_changed": 180,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 19830,
+      "user_lines_removed": 3,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        ".mcp.json": 8,
+        "data/feedbacks/f70_feedback.csv": 5159,
+        "data/feedbacks/g60_feedback.csv": 7409,
+        "data/feedbacks/g70_feedback.csv": 7200,
+        "opencode.json": 5,
+        "package.json": 3,
+        "pnpm-lock.yaml": 36
+      },
+      "user_removed_per_file": {
+        "package.json": 1,
+        "pnpm-lock.yaml": 2
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 19815,
+      "agent_lines_removed": 3,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 19815,
+      "agent_lines_removed": 3,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 19815,
+      "agent_lines_removed": 3,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 19815,
+      "agent_lines_removed": 3,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 186,
+      "agent_lines_removed": 5,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 716,
+      "agent_lines_removed": 5,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 716,
+      "agent_lines_removed": 5,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1549,
+      "agent_lines_removed": 6,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 21,
+      "user_lines_removed": 6,
+      "agent_lines_added": 1676,
+      "agent_lines_removed": 6,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5,
+        "scripts/vfc-taxonomy.json": 6
+      },
+      "user_removed_per_file": {
+        "scripts/vfc-taxonomy.json": 6
+      }
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 21,
+      "user_lines_removed": 6,
+      "agent_lines_added": 1676,
+      "agent_lines_removed": 6,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5,
+        "scripts/vfc-taxonomy.json": 6
+      },
+      "user_removed_per_file": {
+        "scripts/vfc-taxonomy.json": 6
+      }
+    },
+    {
+      "checkpoint_number": 14,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1785,
+      "agent_lines_removed": 6,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    },
+    {
+      "checkpoint_number": 15,
+      "user_lines_added": 15,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1790,
+      "agent_lines_removed": 6,
+      "user_added_per_file": {
+        ".codex/config.toml": 3,
+        ".cursor/mcp.json": 7,
+        "opencode.json": 5
+      }
+    }
+  ]
+}
