@@ -188,3 +188,29 @@ def test_guard_rules():
 @pytest.mark.parametrize("assessment", ["unclear"])
 def test_unclear_needs_no_citation(assessment):
     assert not failed(guard(_pkg(), assessment, "unclear", "Evidence too thin.", [], load_rules()))
+
+
+async def test_gap_fill_researches_important_features_once(analysis_request, monkeypatch, fake_env):
+    # Only range is a core feature, so software complaints have no competitor evidence at first.
+    rules = load_rules()
+    monkeypatch.setattr(rules.competition, "core_features", {"real_world_range": "range WLTP km"})
+    analysis = await run(analysis_request)
+    competition = analysis.reports["competition"]
+    gap = next(a for a in competition.availability if a.source == "gap_fill")
+    assert "reliable_software" in gap.reason
+    pkg = package(analysis, "reliable_software")
+    assert pkg.competitor_values or pkg.competitor_facts
+    ids = [f.id for f in competition.findings]
+    assert len(ids) == len(set(ids))  # merged findings continue the id sequence
+    queries = [q for q, _ in fake_env["provider"].searches if "reliable software" in q]
+    assert queries  # the targeted round searched the gap feature (by name: not a core feature)
+    # one round only, then the judgment runs on the completed packages
+    assert analysis.feature_assessments and any(
+        a.assessment != "not_assessed" for a in analysis.feature_assessments
+    )
+
+
+async def test_no_gap_fill_below_the_importance_threshold(analysis_request, monkeypatch):
+    monkeypatch.setattr(load_rules().gap_fill, "min_customer_ci_low", 1.0)
+    analysis = await run(analysis_request)
+    assert not any(a.source == "gap_fill" for a in analysis.reports["competition"].availability)

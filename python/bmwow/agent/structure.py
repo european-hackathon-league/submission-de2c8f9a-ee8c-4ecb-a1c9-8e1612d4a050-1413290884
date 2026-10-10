@@ -264,6 +264,25 @@ def assemble(
     return sorted(packages, key=lambda p: (-p.importance, -len(p.finding_ids), p.attribute))
 
 
+def gap_requests(
+    packages: list[EvidencePackage], brief: ProductBrief, rules: Rules, known: set[str]
+) -> list[str]:
+    """Important features (customer problem/request share above the threshold) that have no
+    competitor evidence at all: candidates for one targeted research round. Only taxonomy features of
+    the active taxonomy (`known`) and only when the brief has competitors to research."""
+    if not brief.competitors:
+        return []
+    wanted = [
+        p.attribute
+        for p in packages
+        if p.attribute in known
+        and p.importance >= rules.gap_fill.min_customer_ci_low
+        and not p.competitor_values
+        and not p.competitor_facts
+    ]
+    return wanted[: rules.gap_fill.max_features]
+
+
 def render_package(pkg: EvidencePackage) -> str:
     """The package as text for the judgment, with every citable id."""
     lines = [f"# Feature: {pkg.label} ({pkg.attribute})", "", "## Facts computed by code"]

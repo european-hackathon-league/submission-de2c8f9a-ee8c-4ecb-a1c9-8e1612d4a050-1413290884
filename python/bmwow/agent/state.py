@@ -29,4 +29,6 @@ class AnalysisState(TypedDict, total=False):
     reports: Annotated[dict[AgentName, AgentReport], merge_dict]  # each agent writes its own key
     evidence_packages: list[EvidencePackage]  # structure_agent: one per feature
     feature_assessments: list[FeatureAssessment]
+    gap_requests: list[str]  # features to research once more before the judgment
+    gap_round: int  # 0 before gap_fill, 1 after (one round at most)
     analysis: SituationAnalysis

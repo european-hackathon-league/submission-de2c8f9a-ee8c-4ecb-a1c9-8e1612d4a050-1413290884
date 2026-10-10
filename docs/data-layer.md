@@ -49,7 +49,7 @@ If `import bmwow` fails on macOS, see the troubleshooting note in
   `bmwow.agent.knowledge_bridge` is a thin temporary v1 compatibility boundary.
 
 All Python dependencies, including the LangChain/LangGraph, OpenAI, Firecrawl,
-SQLite checkpoint, and clustering integrations, are declared and locked in
+and SQLite checkpoint integrations, are declared and locked in
 `python/pyproject.toml`. Tests use fake LLM/search providers; installing these
 integrations does not call them.
 
@@ -138,8 +138,8 @@ carry a distinct feedback event date, so a `since` filter excludes undated recor
 instead of borrowing observation or publication dates. `limit=0` returns none.
 
 For traced records, v1 deduplicates by original evidence identity. Independent
-comments with identical or similar wording remain in the denominator and may
-cluster together. Legacy untraced test records retain v1's text/similarity dedupe.
+comments with identical or similar wording remain in the denominator. Legacy
+untraced test records retain v1's normalized-text dedupe.
 Item shares describe the retrieved corpus; they are not customer-population shares.
 Cross-source reposts require explicit source-independence handling at ingestion,
 not an assumption that all similar text represents one person.
@@ -325,11 +325,14 @@ SituationAnalysis and its Source records are read/analysis DTOs, not persisted
 ontology objects. Requirement proposal validation and revision-specific human
 Decision events remain separate. No source read or LLM finding grants approval.
 
-Feedback reads and local citation inspection are now available. The orchestration
-owner should next choose how to use imported aspects and stored embeddings: the
-current feedback agent still embeds the selected Verbatim and interprets clusters.
-This adapter neither uses nor re-creates embeddings. Then connect studies, sales,
-and PDF capabilities, followed by candidate ingestion, synthesis, and the dossier.
+Feedback reads and local citation inspection are now available. The feedback agent
+counts the imported aspects per feature, direction and region with intervals; it does
+not embed or cluster Verbatim. It maps an aspect to a feature with
+`FeedbackClassification.attribute` first (the curated VFC mapping), then with interim
+aliases in `python/bmwow/agent/rules.yaml` for features of the active taxonomy only;
+filling `attribute` on the SQL side therefore improves the mapping without agent
+changes. Then connect studies, sales, and PDF capabilities, followed by candidate
+ingestion, synthesis, and the dossier.
 
 For the frontend, group by feedback identity and render its aspects underneath;
 show Quote status and curated/inferred provenance separately. Retain the optional
@@ -356,9 +359,12 @@ preservation, conditional/ranged capabilities, classification grouping, explicit
 country membership, zero and future/group sales, unknown study metadata, partial
 dates, citation resolution, async bridge support, identity-based feedback dedupe,
 and a real LangGraph run with the new backend and controlled reader nodes.
-The graph test uses the real baseline node; its positioning LLM step and the other
-three interpretation agents are replaced with controlled readers. Existing v1
-tests separately exercise all four agents with fake LLM/search providers.
+The graph test uses the real baseline node (facts only, no LLM step) and replaces the
+other three interpretation agents with controlled readers. `test_pipeline_ontology.py`
+runs the whole pipeline (all agents, validate, structure_agent, gap_fill, collect)
+against the synthetic snapshot with fake LLM/search providers, checks that features
+come from the ontology taxonomy and citations resolve, and that the snapshot is
+unchanged. Existing v1 tests separately exercise all four agents.
 
 Run the Python checks from AGENTS.md. They validate integration behavior, not the
 merit of real BMW proposals, actual SQL ingestion, or live provider calls.
