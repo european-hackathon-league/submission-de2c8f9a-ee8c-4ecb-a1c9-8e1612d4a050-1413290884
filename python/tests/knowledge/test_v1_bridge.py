@@ -130,9 +130,6 @@ async def test_future_group_never_becomes_model_sales_or_growth(bridge, knowledg
 async def test_real_graph_wiring_with_synthetic_readers(bridge, knowledge_service, monkeypatch):
     before = knowledge_service.snapshot().model_dump(mode="json")
 
-    async def no_positioning(ctx, models):
-        pass  # This test checks storage and graph wiring, not LLM interpretation.
-
     async def read_feedback(ctx):
         for item in await bridge.get_feedback_items(FeedbackFilter(models=["G60"], markets=["US"])):
             source = ctx.add_source(feedback_source(item))
@@ -162,7 +159,6 @@ async def test_real_graph_wiring_with_synthetic_readers(bridge, knowledge_servic
                 )
             )
 
-    monkeypatch.setattr(baseline, "_positioning", no_positioning)
     request = AnalysisRequest(model_code="G60", regions=["US"])
     graph = build_graph(
         agents={"feedback": read_feedback, "competition": read_study, "trends": read_study}
