@@ -1,0 +1,72 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KSSG85EGPF2RCZX3Q7BSB5",
+  "session_id": "ses_ed88e5feaffeY4gbpPP5jKa4eQ",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T20:59:14.565902Z",
+  "branch": "chore/tidy-layout",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/app/globals.css",
+    "src/app/layout.tsx"
+  ],
+  "agent": "OpenCode",
+  "model": "anthropic.claude-opus-5-5",
+  "turn_id": "293b176cef72",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 32,
+    "cache_creation_tokens": 110470,
+    "cache_read_tokens": 1047135,
+    "output_tokens": 8825,
+    "api_call_count": 15
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T20:59:14.537426Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 67,
+    "total_committed": 0,
+    "total_lines_changed": 67,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 2382,
+      "user_lines_removed": 67,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "components.json": 25,
+        "package.json": 7,
+        "pnpm-lock.yaml": 2169,
+        "src/app/globals.css": 118,
+        "src/app/layout.tsx": 5,
+        "src/components/ui/button.tsx": 57,
+        "src/lib/utils.ts": 1
+      },
+      "user_removed_per_file": {
+        "pnpm-lock.yaml": 51,
+        "src/app/globals.css": 14,
+        "src/app/layout.tsx": 2
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 2382,
+      "agent_lines_removed": 67
+    }
+  ]
+}
