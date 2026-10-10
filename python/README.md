@@ -14,7 +14,11 @@ uv sync --locked
 uv run pytest
 uv run python -m scripts.inspect_knowledge      # synthetic knowledge bridge, no keys or DB
 uv run python scripts/inspect_parking_dossier.py  # the four product questions; add --json
+uv run python -m scripts.inspect_neon_feedback --env-file ../.env  # private Neon feedback; aggregates only
 ```
+
+The Neon check needs `DATABASE_URL` and makes no LLM, embedding, or web calls; see
+[the knowledge layer guide](../docs/data-layer.md#run-the-feedback-slice).
 
 Add dependencies with `uv add <pkg>` or `uv add --dev <pkg>`, and commit
 `pyproject.toml` and `uv.lock` together.
@@ -24,7 +28,7 @@ Add dependencies with `uv add <pkg>` or `uv add --dev <pkg>`, and commit
 ```text
 bmwow/ontology/   Canonical Pydantic models, relationship rules, graph validation,
                   deterministic tools, contract generator (bmwow-schema, bmwow-validate)
-bmwow/knowledge/  Typed read records, snapshot repository, KnowledgeService projections
+bmwow/knowledge/  Typed reads, graph snapshots, read-only Neon feedback queries
 bmwow/agent/      Situation-analysis orchestration v1 (LangGraph); see bmwow/agent/README.md
   models/         v1 evidence DTOs (knowledge records are reexports)
   knowledge_bridge/  v1 module paths that delegate to bmwow.knowledge
