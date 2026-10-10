@@ -3,7 +3,7 @@
   "checkpoint_id": "01M4KN0NBBZBW7N0FNDGVVNAGT",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 18,
+  "checkpoints_count": 20,
   "files_touched": [
     ".mcp.json"
   ],
@@ -42,6 +42,13 @@
       "compact_transcript": "/4/transcript.jsonl",
       "content_hash": "/4/content_hash.txt",
       "prompt": "/4/prompt.txt"
+    },
+    {
+      "metadata": "/5/metadata.json",
+      "transcript": "/5/full.jsonl",
+      "compact_transcript": "/5/transcript.jsonl",
+      "content_hash": "/5/content_hash.txt",
+      "prompt": "/5/prompt.txt"
     }
   ],
   "token_usage": {
@@ -49,6 +56,6 @@
     "cache_creation_tokens": 1773282,
     "cache_read_tokens": 10535447,
     "output_tokens": 138745,
-    "api_call_count": 90
+    "api_call_count": 91
   }
 }
