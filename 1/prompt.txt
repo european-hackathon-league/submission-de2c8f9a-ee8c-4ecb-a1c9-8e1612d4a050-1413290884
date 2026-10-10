@@ -1,0 +1,7 @@
+Research/review only — do NOT edit any files. Repo: /Users/itsmeyaw/projects/bmwow.
+
+1. Read `scripts/vfc-taxonomy.json`. It holds an LLM-generated mapping: `vfc_category` maps 225 BMW VFC level-2 aspect labels to 16 coarse categories, and `issue_type` maps 84 VFC level-3 labels to 11 issue types. The bucket definitions are in `docs/preprocess-pipeline-spec.md` (section "Enrichment: pass 1"). Audit every entry. List ONLY the entries you believe are clearly wrong, as `label -> current -> suggested (one-line reason)`. Watch especially for: level-3 labels starting with "Like"/"Likes"/"... appeals" that are not Praise; "Customer request: ..." labels that are not Feature Request; noise/odor labels; anything mapped to "Unclassified" that has an obvious bucket. Do not list debatable judgement calls — only clear errors. Also give counts per bucket for both maps.
+
+2. Read `scripts/preprocess.ts` against the spec `docs/preprocess-pipeline-spec.md` and `migrations/0000_init.sql`. Report only real bugs or spec violations (correctness, data loss, resume/atomicity, concurrency, LLM-output validation), each with line number and a concrete fix. No style nits.
+
+Return both lists concisely.
