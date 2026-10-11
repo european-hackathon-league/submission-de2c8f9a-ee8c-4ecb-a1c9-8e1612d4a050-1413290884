@@ -39,19 +39,22 @@ async function Cars() {
       </p>
     );
   }
-  const cars = Map.groupBy(runs, (r) => r.modelCode);
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {[...cars].map(([code, group]) => (
-        <CarCard
-          key={code}
-          code={code}
-          runs={group}
-          car={feedback.find((c) => c.derivate === code)}
-        />
-      ))}
-    </div>
-  );
+  const series = Map.groupBy(runs, (r) => r.modelCode[0]);
+  return [...series].reverse().map(([letter, seriesRuns]) => (
+    <section key={letter} className="flex flex-col gap-3">
+      <h2 className="text-sm font-medium text-muted-foreground">{letter} series</h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {[...Map.groupBy(seriesRuns, (r) => r.modelCode)].map(([code, group]) => (
+          <CarCard
+            key={code}
+            code={code}
+            runs={group}
+            car={feedback.find((c) => c.derivate === code)}
+          />
+        ))}
+      </div>
+    </section>
+  ));
 }
 
 function CarCard({ code, runs, car }: { code: string; runs: RunSummary[]; car?: Car }) {
