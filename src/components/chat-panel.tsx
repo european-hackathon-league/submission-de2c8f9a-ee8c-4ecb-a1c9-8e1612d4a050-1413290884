@@ -22,11 +22,12 @@ const MIN_WIDTH = 320;
 const WIDTH_KEY = "chat-width";
 /** Citation markers the agent writes, e.g. `[G70-0042]`. */
 const CITATION = /\[([A-Z0-9]{2,8}-\d+)\]/g;
-const TOOL_STATUS: Record<string, string> = {
-  searchFeedback: "Searching feedback…",
-  getRanking: "Comparing rankings…",
-  getCategoryDetail: "Reading category detail…",
-  getEvidence: "Reading verbatims…",
+/** Step labels per tool: [running, done]. */
+const TOOL_LABEL: Record<string, [string, string]> = {
+  searchFeedback: ["Searching feedback…", "Searched feedback"],
+  getRanking: ["Comparing rankings…", "Read ranking"],
+  getCategoryDetail: ["Reading category detail…", "Read category detail"],
+  getEvidence: ["Reading verbatims…", "Read verbatims"],
 };
 
 type Cited = {
@@ -39,7 +40,13 @@ type Cited = {
   quote: string | null;
 };
 const noSubscribe = () => () => {};
-type ToolPart = { type: string; state: string; output?: unknown };
+type ToolPart = {
+  type: string;
+  state: string;
+  input?: Record<string, unknown>;
+  output?: unknown;
+  errorText?: string;
+};
 
 const toolParts = (m: UIMessage) =>
   m.parts.filter((p) => p.type.startsWith("tool-")) as unknown as ToolPart[];
@@ -108,17 +115,6 @@ export function ChatPanel() {
       ]
     : ["Which car has the most pressing issue?", "What should be improved across all cars?"];
   const last = messages.at(-1);
-  const pending =
-    last?.role === "assistant"
-      ? toolParts(last).findLast((p) => p.state.startsWith("input"))
-      : undefined;
-  const statusLine = !busy
-    ? null
-    : pending
-      ? (TOOL_STATUS[pending.type.slice(5)] ?? "Working…")
-      : status === "submitted"
-        ? "Thinking…"
-        : null;
 
   return (
     <aside
@@ -189,17 +185,19 @@ export function ChatPanel() {
                   {m.parts.map((p) => (p.type === "text" ? p.text : "")).join("")}
                 </div>
               ) : (
-                <div key={m.id} className="min-w-0 text-sm">
+                <div key={m.id} className="flex min-w-0 flex-col gap-1 text-sm">
                   {m.parts.map((p, i) =>
                     p.type === "text" ? (
                       <Answer key={i} text={p.text} cited={cited} animating={busy && m === last} />
+                    ) : p.type.startsWith("tool-") ? (
+                      <Step key={i} part={p as unknown as ToolPart} />
                     ) : null,
                   )}
                 </div>
               ),
             )}
-            {statusLine && (
-              <p className="animate-pulse text-xs text-muted-foreground">{statusLine}</p>
+            {status === "submitted" && (
+              <p className="animate-pulse text-xs text-muted-foreground">Thinking…</p>
             )}
             {error && <p className="text-xs text-destructive">Something went wrong. Try again.</p>}
           </div>
@@ -280,7 +278,7 @@ function Citation({ c }: { c: Cited }) {
         {c.id}
       </PopoverTrigger>
       <PopoverContent className="w-96 gap-2">
-        <blockquote className="leading-relaxed whitespace-pre-line">
+        <blockquote className="max-h-60 overflow-y-auto leading-relaxed whitespace-pre-line">
           {at < 0 ? (
             c.text
           ) : (
@@ -302,5 +300,50 @@ function Citation({ c }: { c: Cited }) {
         </p>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** One-line digest of a tool call's arguments: query, category, sentiment, scope. */
+function stepArgs(input: Record<string, unknown> = {}) {
+  const { query, category, sentiment, derivate, country, engine } = input;
+  const scope = [derivate ?? "all cars", country, engine].filter(Boolean).join(" ");
+  return [query && `"${query}"`, category, sentiment, scope].filter(Boolean).join(" · ");
+}
+
+/** A tool call, collapsed to a summary line; expand to see what it returned. */
+function Step({ part }: { part: ToolPart }) {
+  const [running, done] = TOOL_LABEL[part.type.slice(5)] ?? ["Working…", part.type.slice(5)];
+  const { state, output } = part;
+  if (state.startsWith("input"))
+    return <p className="animate-pulse text-xs text-muted-foreground">{running}</p>;
+  const count = Array.isArray(output) ? ` · ${output.length} results` : "";
+  return (
+    <details className="group rounded-md border text-xs">
+      <summary className="cursor-pointer list-none truncate px-2 py-1 text-muted-foreground hover:text-foreground">
+        <span className="mr-1 inline-block transition-transform group-open:rotate-90">›</span>
+        {state === "output-error" ? `${done} failed` : done}
+        {" · "}
+        {stepArgs(part.input)}
+        {count}
+      </summary>
+      <div className="max-h-72 overflow-auto border-t p-2">
+        {state === "output-error" ? (
+          <p className="text-destructive">{part.errorText}</p>
+        ) : Array.isArray(output) && output.every((x) => x?.id && x.text) ? (
+          <ul className="flex flex-col gap-1.5">
+            {(output as Cited[]).map((c) => (
+              <li key={c.id} className="flex items-start gap-1">
+                <Citation c={c} />
+                <span className="line-clamp-2">{c.text}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <pre className="font-mono text-[0.7rem] whitespace-pre">
+            {typeof output === "string" ? output : JSON.stringify(output, null, 2)}
+          </pre>
+        )}
+      </div>
+    </details>
   );
 }
