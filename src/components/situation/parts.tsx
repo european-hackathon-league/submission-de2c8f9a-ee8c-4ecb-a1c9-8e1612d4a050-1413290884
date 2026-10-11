@@ -2,38 +2,70 @@ import { Badge } from "@/components/ui/badge";
 import { pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-/** What each assessment means; shown as badge title and in the legend. */
-export const ASSESSMENTS: Record<string, { label: string; className: string; hint: string }> = {
+/**
+ * What each assessment means; shown as badge title and in the legend. `bar` colours CSS bars,
+ * `fill` colours charts.
+ */
+export const ASSESSMENTS: Record<
+  string,
+  { label: string; className: string; hint: string; bar: string; fill: string }
+> = {
   gap: {
     label: "Gap",
     className: "bg-destructive/10 text-destructive",
     hint: "We fall short of what customers expect or competitors offer.",
+    bar: "bg-destructive",
+    fill: "var(--destructive)",
   },
   demand: {
     label: "Demand",
     className: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
     hint: "Customers or the market ask for more, regardless of competitors.",
+    bar: "bg-sky-500",
+    fill: "var(--color-sky-500)",
   },
   hygiene_factor: {
-    label: "Hygiene factor",
+    label: "Must-have",
     className: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
-    hint: "A baseline expectation: customers complain, but competitors are no better. Keep the level, fix the complaints.",
+    hint: "A basic expectation: customers complain, but competitors are no better. Keep the level, fix the complaints.",
+    bar: "bg-amber-500",
+    fill: "var(--color-amber-500)",
   },
   strength: {
     label: "Strength",
     className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
     hint: "We lead, or customers praise it. Keep it.",
+    bar: "bg-emerald-500",
+    fill: "var(--color-emerald-500)",
   },
   unclear: {
     label: "Unclear",
     className: "bg-muted text-muted-foreground",
     hint: "Evidence too thin or contradictory to decide.",
+    bar: "bg-muted-foreground/25",
+    fill: "color-mix(in oklch, var(--muted-foreground) 25%, transparent)",
   },
   not_assessed: {
     label: "Not assessed",
     className: "bg-muted text-muted-foreground",
     hint: "Not assessed in this run.",
+    bar: "bg-muted-foreground/25",
+    fill: "color-mix(in oklch, var(--muted-foreground) 25%, transparent)",
   },
+};
+
+/** The decided verdicts, in display order. */
+export const VERDICTS = ["gap", "demand", "hygiene_factor", "strength"] as const;
+
+/** Stored texts say "hygiene_factor"; the UI says "must-have". */
+export const unjargon = (text: string) => text.replace(/hygiene[_ ]factors?/gi, "must-have");
+
+/** A requirement statement without its "The successor should improve" lead, for one-line display. */
+export const plainRequirement = (text: string) => {
+  const s = unjargon(text)
+    .replace(/\bthe successor should (improve|introduce|retain|remove)\s+(the\s+)?/i, "")
+    .replace(/^(improve|introduce|retain|remove)\s+/i, "");
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 export function AssessmentBadge({ value, method }: { value: string; method?: string }) {
@@ -171,5 +203,45 @@ export function Cited({ text }: { text: string }) {
         ),
       )}
     </p>
+  );
+}
+
+/** The decided verdicts of one run as a single segmented bar; unclear ones only in the tooltip. */
+export function VerdictStrip({ counts }: { counts: Record<string, number> }) {
+  const parts = VERDICTS.map((k) => ({ k, n: counts[k] ?? 0 }));
+  const total = parts.reduce((s, p) => s + p.n, 0) || 1;
+  const unclear = (counts.unclear ?? 0) + (counts.not_assessed ?? 0);
+  return (
+    <div
+      className="flex h-2 w-full min-w-16 gap-px overflow-hidden rounded-full bg-muted"
+      title={[...parts.map((p) => `${ASSESSMENTS[p.k].label}: ${p.n}`), `Unclear: ${unclear}`].join(
+        " · ",
+      )}
+    >
+      {parts.map(
+        (p) =>
+          p.n > 0 && (
+            <div
+              key={p.k}
+              className={ASSESSMENTS[p.k].bar}
+              style={{ width: `${(p.n / total) * 100}%` }}
+            />
+          ),
+      )}
+    </div>
+  );
+}
+
+/** Colour key for VerdictStrip; each label explains itself on hover. */
+export function VerdictLegend() {
+  return (
+    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      {VERDICTS.map((k) => (
+        <li key={k} className="flex items-center gap-1.5" title={ASSESSMENTS[k].hint}>
+          <span className={cn("size-2.5 rounded-sm", ASSESSMENTS[k].bar)} />
+          {ASSESSMENTS[k].label}
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -4,7 +4,13 @@ import { cacheLife } from "next/cache";
 import { db } from "@/server/db/client";
 
 /** Which slice of feedback a view covers. `null` means "all". */
-export type Scope = { derivate: string | null; country: string | null; engine: string | null };
+export type Scope = {
+  derivate: string | null;
+  country: string | null;
+  engine: string | null;
+  /** A sales market's countries (e.g. EU27), on top of `country`. */
+  countries?: string[] | null;
+};
 
 export type Car = {
   derivate: string;
@@ -57,7 +63,15 @@ export const inScope = (
   s: Scope,
 ) => sql`(${s.derivate}::text is null or e.derivate_code = ${s.derivate})
   and (${s.country}::text is null or e.country = ${s.country})
-  and (${s.engine}::text is null or e.engine_type = ${s.engine})`;
+  and (${s.engine}::text is null or e.engine_type = ${s.engine})
+  and ${
+    s.countries?.length
+      ? sql`e.country in (${sql.join(
+          s.countries.map((c) => sql`${c}`),
+          sql`, `,
+        )})`
+      : sql`true`
+  }`;
 
 export async function listCars(): Promise<Car[]> {
   "use cache";
