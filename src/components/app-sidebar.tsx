@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Analytics01Icon, Car01Icon, Task01Icon } from "@hugeicons/core-free-icons";
+import { Analytics01Icon, BookOpen01Icon, Car01Icon, Task01Icon } from "@hugeicons/core-free-icons";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -21,6 +21,7 @@ import {
 const user = { name: "Product Manager", email: "pm@bmw.example" };
 
 const NAV = [
+  { href: "/introduction", label: "Introduction", icon: BookOpen01Icon },
   { href: "/feedback", label: "Feedback", icon: Task01Icon }, // stroke-only; ClipboardListIcon's filled outline renders bold
   { href: "/analysis", label: "Analysis", icon: Analytics01Icon },
 ];
