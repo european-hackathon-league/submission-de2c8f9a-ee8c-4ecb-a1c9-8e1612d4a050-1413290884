@@ -4,7 +4,7 @@ import { cacheLife } from "next/cache";
 import { db } from "@/server/db/client";
 
 /** Which slice of feedback a view covers. `null` means "all". */
-export type Scope = { derivate: string; country: string | null; engine: string | null };
+export type Scope = { derivate: string | null; country: string | null; engine: string | null };
 
 export type Car = {
   derivate: string;
@@ -36,6 +36,7 @@ export type Ranking = { total: number; rows: CategoryRow[]; unclassified: number
 
 export type Evidence = {
   id: string;
+  derivate: string | null;
   country: string | null;
   engine: string | null;
   source: string | null;
@@ -48,11 +49,13 @@ export type Evidence = {
 
 const UNCLASSIFIED = "Unclassified";
 
-async function rows<T>(query: SQL): Promise<T[]> {
+export async function rows<T>(query: SQL): Promise<T[]> {
   return (await db.execute(query)).rows as T[];
 }
 
-const inScope = (s: Scope) => sql`e.derivate_code = ${s.derivate}
+export const inScope = (
+  s: Scope,
+) => sql`(${s.derivate}::text is null or e.derivate_code = ${s.derivate})
   and (${s.country}::text is null or e.country = ${s.country})
   and (${s.engine}::text is null or e.engine_type = ${s.engine})`;
 
@@ -160,11 +163,24 @@ export async function getEvidence(
   cacheLife("hours");
   return rows<Evidence>(sql`
     select * from (
-      select distinct on (e.id) e.feedback_explorer_id as id, e.country, e.engine_type as engine,
+      select distinct on (e.id) e.feedback_explorer_id as id, e.derivate_code as derivate,
+        e.country, e.engine_type as engine,
         e.source, e.raw_feedback as text, a.quote_snippet as quote, a.aspect_term as term,
         a.issue_type as issue, abs(a.sentiment_score)::float8 as score
       from feedback_aspects a join feedback_entries e on e.id = a.feedback_entry_id
       where ${inScope(s)} and a.vfc_category = ${category} and a.sentiment = ${sentiment}
       order by e.id, abs(a.sentiment_score) desc
     ) x order by score desc, id limit ${limit}`);
+}
+
+/** Sales volume per car and sales market (EU, US, CN, RoW). 2030 is a forecast. No engine split. */
+export type Sale = { model: string; market: string; v2024: number; v2025: number; v2030: number };
+
+export async function getSales(): Promise<Sale[]> {
+  "use cache";
+  cacheLife("hours");
+  return rows<Sale>(sql`
+    select model_code as model, market_code as market,
+      volume_2024 as v2024, volume_2025 as v2025, volume_2030 as v2030
+    from sales order by 1, 2`);
 }

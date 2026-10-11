@@ -22,7 +22,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
         <div className="flex flex-1 flex-col gap-6 p-6">{children}</div>
       </SidebarInset>
-      <ChatPanel />
+      <Suspense>
+        <ChatPanel />
+      </Suspense>
     </SidebarProvider>
   );
 }

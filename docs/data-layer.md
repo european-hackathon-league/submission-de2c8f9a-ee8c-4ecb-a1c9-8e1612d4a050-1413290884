@@ -409,7 +409,10 @@ Decision events remain separate. No source read or LLM finding grants approval.
 Combined reads, workbook import, and local citation inspection are now available. The orchestration
 owner should next choose how to use imported aspects and stored embeddings: the
 current feedback agent still embeds the selected Verbatim and interprets clusters.
-This adapter neither uses nor re-creates embeddings. Sales and studies can already
+This adapter neither uses nor re-creates embeddings. The TypeScript analysis chat
+(`src/server/chat/search.ts`) does query the stored vectors. It uses a hybrid of
+cosine similarity and `search_tsv`, fused with RRF and scoped by car, country,
+and engine. Sales and studies can already
 be read from the imported snapshot; source-region sales routing and use of typed
 study results remain orchestration work. Curate catalog capabilities and mappings,
 then connect validated agent candidates, synthesis, and the requirement dossier.
