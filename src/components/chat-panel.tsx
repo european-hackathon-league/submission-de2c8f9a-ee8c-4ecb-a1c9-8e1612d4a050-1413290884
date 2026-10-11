@@ -28,6 +28,7 @@ const TOOL_LABEL: Record<string, [string, string]> = {
   getRanking: ["Comparing rankings…", "Read ranking"],
   getCategoryDetail: ["Reading category detail…", "Read category detail"],
   getEvidence: ["Reading verbatims…", "Read verbatims"],
+  searchWeb: ["Searching the web…", "Searched the web"],
 };
 
 type Cited = {
@@ -112,8 +113,13 @@ export function ChatPanel() {
     ? [
         `What is the most pressing issue of the ${derivate}?`,
         `What should be improved from this ${derivate}?`,
+        `What should be added to this ${derivate}?`,
       ]
-    : ["Which car has the most pressing issue?", "What should be improved across all cars?"];
+    : [
+        "Which car has the most pressing issue?",
+        "What should be improved across all cars?",
+        "What should be added to our cars?",
+      ];
   const last = messages.at(-1);
 
   return (
@@ -256,7 +262,7 @@ function Answer({
           const id = href?.startsWith("#cite-") ? href.slice(6) : null;
           if (!id)
             return (
-              <a href={href} {...rest}>
+              <a href={href} target="_blank" rel="noreferrer" className="underline" {...rest}>
                 {children}
               </a>
             );
@@ -303,12 +309,17 @@ function Citation({ c }: { c: Cited }) {
   );
 }
 
-/** One-line digest of a tool call's arguments: query, category, sentiment, scope. */
+/** One-line digest of a tool call's arguments: query or topic, category, sentiment, scope. */
 function stepArgs(input: Record<string, unknown> = {}) {
-  const { query, category, sentiment, derivate, country, engine } = input;
-  const scope = [derivate ?? "all cars", country, engine].filter(Boolean).join(" ");
-  return [query && `"${query}"`, category, sentiment, scope].filter(Boolean).join(" · ");
+  const { query, topic, category, sentiment, derivate, country, engine } = input;
+  const scope =
+    "derivate" in input ? [derivate ?? "all cars", country, engine].filter(Boolean).join(" ") : "";
+  const q = query ?? topic;
+  return [q && `"${q}"`, category, sentiment, scope].filter(Boolean).join(" · ");
 }
+
+type WebResult = { summary: string; sources: { title: string; url: string }[] };
+const isWeb = (x: unknown): x is WebResult => Array.isArray((x as WebResult | null)?.sources);
 
 /** A tool call, collapsed to a summary line; expand to see what it returned. */
 function Step({ part }: { part: ToolPart }) {
@@ -316,7 +327,11 @@ function Step({ part }: { part: ToolPart }) {
   const { state, output } = part;
   if (state.startsWith("input"))
     return <p className="animate-pulse text-xs text-muted-foreground">{running}</p>;
-  const count = Array.isArray(output) ? ` · ${output.length} results` : "";
+  const count = Array.isArray(output)
+    ? ` · ${output.length} results`
+    : isWeb(output)
+      ? ` · ${output.sources.length} sources`
+      : "";
   return (
     <details className="group rounded-md border text-xs">
       <summary className="cursor-pointer list-none truncate px-2 py-1 text-muted-foreground hover:text-foreground">
@@ -337,6 +352,21 @@ function Step({ part }: { part: ToolPart }) {
                 <span className="line-clamp-2">{c.text}</span>
               </li>
             ))}
+          </ul>
+        ) : isWeb(output) ? (
+          <ul className="flex flex-col gap-1">
+            {output.sources.length ? (
+              output.sources.map((s) => (
+                <li key={s.url} className="truncate">
+                  <a href={s.url} target="_blank" rel="noreferrer" className="underline">
+                    {s.title}
+                  </a>{" "}
+                  <span className="text-muted-foreground">{new URL(s.url).hostname}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-muted-foreground">{output.summary}</li>
+            )}
           </ul>
         ) : (
           <pre className="font-mono text-[0.7rem] whitespace-pre">
