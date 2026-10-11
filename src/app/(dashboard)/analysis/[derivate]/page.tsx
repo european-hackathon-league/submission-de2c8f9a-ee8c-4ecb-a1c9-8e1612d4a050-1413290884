@@ -110,7 +110,6 @@ async function CarView({ params, searchParams }: PageProps<"/analysis/[derivate]
           value={mood(summary.net).label}
           valueClass={mood(summary.net).className}
           sub={signed(summary.net)}
-          hint="Mean aspect sentiment, −1 to +1"
         />
         <Kpi
           label="Feedback with a problem"
@@ -162,7 +161,7 @@ function Kpi({
   value: string;
   hint?: string;
   small?: boolean;
-  /** Secondary figure shown small after the value. */
+  /** Secondary figure shown small below the value. */
   sub?: string;
   valueClass?: string;
 }) {
@@ -170,9 +169,7 @@ function Kpi({
     <Card>
       <CardHeader>
         <CardDescription>{label}</CardDescription>
-        <CardTitle
-          className={`flex flex-wrap items-baseline gap-x-2 ${small ? "text-lg" : "text-3xl tabular-nums"}`}
-        >
+        <CardTitle className={`flex flex-col gap-1 ${small ? "text-lg" : "text-3xl tabular-nums"}`}>
           <span className={`${small ? "" : "whitespace-nowrap"} ${valueClass ?? ""}`}>{value}</span>
           {sub && (
             <span className="text-sm font-normal text-muted-foreground tabular-nums">{sub}</span>
