@@ -14,7 +14,7 @@ export type Attachment = Evidence & { category: string; tone: "Negative" | "Posi
 type Send = (text: string, cards: Attachment[]) => boolean;
 
 const SOLUTION_PROMPT =
-  "Find solutions for this complaint. Look for similar feedback and for known fixes or best practices from the web.";
+  "Propose what BMW could change to address this complaint (product, software, documentation, service). Check how widespread it is in similar feedback and how competitors or the industry handle it.";
 
 function useChatState() {
   const [open, setOpen] = useState(true);
