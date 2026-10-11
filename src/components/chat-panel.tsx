@@ -168,7 +168,7 @@ export function ChatPanel() {
                   <Button
                     key={s}
                     variant="outline"
-                    className="h-auto justify-start text-left whitespace-normal"
+                    className="h-auto justify-start px-3 py-2 text-left whitespace-normal"
                     onClick={() => send(s)}
                   >
                     {s}
@@ -185,7 +185,7 @@ export function ChatPanel() {
                   {m.parts.map((p) => (p.type === "text" ? p.text : "")).join("")}
                 </div>
               ) : (
-                <div key={m.id} className="flex min-w-0 flex-col gap-1 text-sm">
+                <div key={m.id} className="flex min-w-0 flex-col gap-3 text-sm">
                   {m.parts.map((p, i) =>
                     p.type === "text" ? (
                       <Answer key={i} text={p.text} cited={cited} animating={busy && m === last} />
