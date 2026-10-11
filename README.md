@@ -9,6 +9,25 @@ them.
 The result is not a chatbot summary. Every number is computed by code, every claim cites its
 source, and the PM has the final say.
 
+## Contents
+
+- [Highlights](#highlights)
+  - [LLMs handle language; code handles numbers and checks](#llms-handle-language-code-handles-numbers-and-checks)
+  - [Ontology and traceability](#ontology-and-traceability)
+  - [The PM stays in the loop](#the-pm-stays-in-the-loop)
+  - [Dashboards with a grounded chat](#dashboards-with-a-grounded-chat)
+  - [Region-aware by design](#region-aware-by-design)
+  - [Data boundary](#data-boundary)
+- [Architecture](#architecture)
+- [Quick start](#quick-start)
+  - [Without BMW data or API keys](#without-bmw-data-or-api-keys)
+  - [Full setup with data](#full-setup-with-data)
+  - [Web research backends](#web-research-backends)
+- [Limitations and next steps](#limitations-and-next-steps)
+- [Development](#development)
+- [Docs](#docs)
+- [Data and sharing](#data-and-sharing)
+
 ## Highlights
 
 ### LLMs handle language; code handles numbers and checks
