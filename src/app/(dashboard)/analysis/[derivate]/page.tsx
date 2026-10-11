@@ -14,7 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { countryName, int, mood, pct, signed } from "@/lib/format";
+import { countryName, int, mood, pct, signed, signTone } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
   getCategoryDetail,
   getEvidence,
@@ -248,7 +249,9 @@ function PriorityTable({ ranking, sp }: { ranking: Ranking; sp: Search }) {
                   {r.negative ? r.severity.toFixed(2) : "–"}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{int(r.demand)}</TableCell>
-                <TableCell className="text-right tabular-nums">{signed(r.net)}</TableCell>
+                <TableCell className={cn("text-right tabular-nums", signTone(r.net))}>
+                  {signed(r.net)}
+                </TableCell>
                 <TableCell className="text-muted-foreground">{r.topIssue ?? "–"}</TableCell>
               </TableRow>
             ))}
