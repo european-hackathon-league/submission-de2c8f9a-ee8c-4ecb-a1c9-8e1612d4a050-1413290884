@@ -17,11 +17,11 @@ export function Crumbs() {
   const [, section, derivate] = usePathname().split("/");
   const region = useSearchParams().get("region");
   const items: { label: string; href?: string }[] = [];
-  if (section === "analysis") {
-    items.push({ label: "Analysis", href: "/analysis" });
+  if (section === "feedback") {
+    items.push({ label: "Feedback", href: "/feedback" });
     if (derivate) {
       const car = decodeURIComponent(derivate);
-      items.push({ label: car, href: `/analysis/${derivate}` });
+      items.push({ label: car, href: `/feedback/${derivate}` });
       items.push({ label: countryName(region) });
     }
   }

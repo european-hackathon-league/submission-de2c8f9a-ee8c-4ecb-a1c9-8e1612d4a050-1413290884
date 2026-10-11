@@ -81,10 +81,10 @@ export function ChatPanel() {
   const [input, setInput] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const situation = pathname.startsWith("/situation");
-  const derivate = pathname.match(/^\/(?:analysis|situation)\/([^/]+)/)?.[1] ?? null;
+  const situation = pathname.startsWith("/analysis");
+  const derivate = pathname.match(/^\/(?:feedback|analysis)\/([^/]+)/)?.[1] ?? null;
   const search = useSearchParams();
-  // On /situation pages the chat answers from that car's stored run (and open feature).
+  // On /analysis pages the chat answers from that car's stored run (and open feature).
   const page = situation
     ? { view: "situation", derivate, region: search.get("region"), feature: search.get("feature") }
     : { derivate, region: search.get("region"), engine: search.get("engine") };

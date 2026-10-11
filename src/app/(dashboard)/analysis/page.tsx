@@ -1,20 +1,26 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { sentence, VerdictLegend, VerdictStrip } from "@/components/situation/parts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { int, signed } from "@/lib/format";
-import { getRanking, listCars, type Car } from "@/server/analysis/queries";
+import { int, mood } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { listCars, type Car } from "@/server/analysis/queries";
+import { listRuns, type RunSummary } from "@/server/situation/queries";
 
-export default function AnalysisPage() {
+export default function SituationPage() {
   return (
     <>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Analysis</h1>
-        <p className="text-sm text-muted-foreground">
-          Pick a car to see which aspects customers most want improved.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Analysis</h1>
+          <p className="text-sm text-muted-foreground">
+            Requirements for each car's successor, per market.
+          </p>
+        </div>
+        <VerdictLegend />
       </div>
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-xl" />}>
         <Cars />
@@ -25,57 +31,86 @@ export default function AnalysisPage() {
 
 async function Cars() {
   await connection(); // keep the DB out of the build-time prerender
-  const cars = await listCars();
-  const series = Map.groupBy(cars, (c) => c.derivate[0]);
-  return [...series].reverse().map(([letter, group]) => (
+  const [runs, feedback] = await Promise.all([listRuns(), listCars()]);
+  if (!runs.length) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No stored runs yet. Export one with python/scripts/export_analysis.py.
+      </p>
+    );
+  }
+  const series = Map.groupBy(runs, (r) => r.modelCode[0]);
+  return [...series].reverse().map(([letter, seriesRuns]) => (
     <section key={letter} className="flex flex-col gap-3">
       <h2 className="text-sm font-medium text-muted-foreground">{letter} series</h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {group.map((car) => (
-          <CarCard key={car.derivate} car={car} />
+        {[...Map.groupBy(seriesRuns, (r) => r.modelCode)].map(([code, group]) => (
+          <CarCard
+            key={code}
+            code={code}
+            runs={group}
+            car={feedback.find((c) => c.derivate === code)}
+          />
         ))}
       </div>
     </section>
   ));
 }
 
-async function CarCard({ car }: { car: Car }) {
-  const { rows } = await getRanking({ derivate: car.derivate, country: null, engine: null });
-  const top = rows[0];
+function CarCard({ code, runs, car }: { code: string; runs: RunSummary[]; car?: Car }) {
+  const lead = runs.reduce((a, b) => (b.requirements > a.requirements ? b : a));
+  const m = mood(car?.net ?? null);
   return (
-    <Link
-      href={`/analysis/${car.derivate}`}
-      className="rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-    >
-      <Card className="h-full transition-colors hover:bg-muted/50">
-        <CardHeader>
-          <CardTitle className="text-3xl font-semibold tracking-tight">{car.derivate}</CardTitle>
-          <CardDescription>{car.name}</CardDescription>
-        </CardHeader>
-        <CardContent className="gap-4">
-          <div className="flex gap-1">
-            {car.engines.map((e) => (
-              <Badge key={e} variant="secondary">
-                {e}
-              </Badge>
-            ))}
-          </div>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Feedback</dt>
-              <dd className="font-medium tabular-nums">{int(car.feedback)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Net sentiment</dt>
-              <dd className="font-medium tabular-nums">{signed(car.net)}</dd>
-            </div>
-            <div className="col-span-2">
-              <dt className="text-muted-foreground">#1 priority</dt>
-              <dd className="font-medium">{top?.category ?? "–"}</dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
-    </Link>
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="text-3xl font-semibold tracking-tight">
+          <Link href={`/analysis/${code}?region=${lead.region}`} className="hover:underline">
+            {code}
+          </Link>
+        </CardTitle>
+        <CardDescription>
+          {runs[0].modelName ?? code}
+          <span className="block text-xs">
+            {car ? (
+              <>
+                {int(car.feedback)} feedback ·{" "}
+                <span className={cn("font-medium", m.className)}>{m.label}</span>
+              </>
+            ) : (
+              "No customer feedback"
+            )}
+          </span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-1">
+          {runs.map((r) => (
+            <li key={r.runId}>
+              <Link
+                href={`/analysis/${code}?region=${r.region}`}
+                className="grid grid-cols-[3rem_1fr_4.5rem] items-center gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-muted/50"
+              >
+                <Badge variant="secondary" className="justify-self-start">
+                  {r.region === "ALL" ? "All" : r.region}
+                </Badge>
+                <VerdictStrip counts={r.verdicts} />
+                <span className="text-right tabular-nums">
+                  <span className="font-medium">{r.requirements}</span>{" "}
+                  <span className="text-xs text-muted-foreground">req.</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {lead.topFeature && (
+          <p className="truncate text-sm">
+            <span className="text-xs text-muted-foreground">
+              #1 ({lead.region === "ALL" ? "all" : lead.region}){" "}
+            </span>
+            <span className="font-medium">{sentence(lead.topFeature)}</span>
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

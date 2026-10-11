@@ -21,7 +21,7 @@ import {
   type Scope,
 } from "@/server/analysis/queries";
 
-/** Customer-feedback building blocks shared by /analysis and /situation. */
+/** Customer-feedback building blocks shared by /feedback and /analysis. */
 
 export type Search = Record<string, string | string[] | undefined>;
 export const one = (v: string | string[] | undefined) => (typeof v === "string" && v ? v : null);

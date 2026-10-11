@@ -21,8 +21,8 @@ import {
 const user = { name: "Product Manager", email: "pm@bmw.example" };
 
 const NAV = [
+  { href: "/feedback", label: "Feedback", icon: Task01Icon }, // stroke-only; ClipboardListIcon's filled outline renders bold
   { href: "/analysis", label: "Analysis", icon: Analytics01Icon },
-  { href: "/situation", label: "Situation analysis", icon: Task01Icon }, // stroke-only; ClipboardListIcon's filled outline renders bold
 ];
 
 /** The page links; the active one follows the URL (read inside Suspense, so prerendering is not blocked). */
@@ -51,7 +51,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/analysis" />}>
+            <SidebarMenuButton size="lg" render={<Link href="/feedback" />}>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <HugeiconsIcon icon={Car01Icon} strokeWidth={2} className="size-4" />
               </div>
