@@ -21,7 +21,7 @@ import { regionLabel, shortFeedbackId, type SituationPage } from "./situation-li
 
 export const SITUATION_INSTRUCTIONS = `## Situation analysis (requirement recommendations)
 - A run analyses one car in one region (EU, US, CN) or in all its regions ("All"): our current model (price list, studies, sales), competitors (like-for-like values: same unit, test standard and powertrain), customer feedback shares, and trends.
-- Each feature gets an assessment: gap (we fall short of customers or competitors), demand (customers or the market ask for more), hygiene_factor (customers complain but competitors are no better: keep the level, fix the complaints), strength (we lead or customers praise it), unclear (too little evidence).
+- Each feature gets an assessment: gap (we fall short of customers or competitors), demand (customers or the market ask for more), hygiene_factor, shown to users as "Must-have" (customers complain but competitors are no better: keep the level, fix the complaints; always call it "must-have" in answers), strength (we lead or customers praise it), unclear (too little evidence).
 - method "judge" = judged by an LLM with a fixed rubric and checked by code rules; "rule" = computed by code from the numbers only (low certainty).
 - Features are grouped into categories: Exterior, Interior, Powertrain, Driver assistance, Digital & UX, Ownership & business.
 - Requirements (REQ-n) are the recommended features, in order of customer impact. A target comes from the competitor median, best in class or today's value; "set by PM" means no comparable number.

@@ -19,6 +19,10 @@ export type RunSummary = {
   requirements: number;
   features: number;
   topRequirement: string | null;
+  /** Label of the feature behind REQ-1. */
+  topFeature: string | null;
+  /** Feature count per assessment. */
+  verdicts: Record<string, number>;
 };
 
 export type AgentStatus = Record<
@@ -116,7 +120,13 @@ export type Signal = {
   differsFrom: string | null;
 };
 
-export type Quote = { sourceId: string; direction: string | null; text: string };
+/** `snippets`: the aspect quotes of that feedback item matching the direction, for highlighting. */
+export type Quote = {
+  sourceId: string;
+  direction: string | null;
+  text: string;
+  snippets: string[];
+};
 export type SubTheme = { direction: string; name: string; k: number; ofTotal: number };
 export type Trend = { findingId: string; claim: string; horizon: string | null; thin: boolean };
 export type Source = {
@@ -158,7 +168,13 @@ const RUN_COLUMNS = sql`
   (select count(*) from analysis_requirements q where q.run_id = r.run_id)::int as requirements,
   (select count(*) from analysis_features f where f.run_id = r.run_id)::int as features,
   (select q.statement from analysis_requirements q where q.run_id = r.run_id
-     order by length(q.req_id), q.req_id limit 1) as "topRequirement"`;
+     order by length(q.req_id), q.req_id limit 1) as "topRequirement",
+  (select f.label from analysis_requirements q
+     join analysis_features f on f.run_id = q.run_id and f.attribute = q.attribute
+     where q.run_id = r.run_id order by length(q.req_id), q.req_id limit 1) as "topFeature",
+  (select coalesce(jsonb_object_agg(assessment, n), '{}') from (
+     select assessment, count(*)::int as n from analysis_features f
+     where f.run_id = r.run_id group by 1) v) as verdicts`;
 
 /** One run per car and region (the latest export); "ALL" first, then the single regions. */
 export async function listRuns(): Promise<RunSummary[]> {
@@ -255,8 +271,14 @@ export async function getFeatureDetail(
         select direction, name, k, of_total as "ofTotal"
         from analysis_sub_themes where ${at} order by direction, k desc limit 12`),
       rows<Quote>(sql`
-        select source_id as "sourceId", direction, text
-        from analysis_quotes where ${at} order by ordinal`),
+        select q.source_id as "sourceId", q.direction, q.text,
+          array(select distinct a.quote_snippet
+            from feedback_entries e join feedback_aspects a on a.feedback_entry_id = e.id
+            where e.feedback_explorer_id = regexp_replace(q.source_id, '^.*:', '')
+              and a.quote_snippet is not null
+              and (q.direction is distinct from 'problem' or a.sentiment = 'Negative')
+              and (q.direction is distinct from 'strength' or a.sentiment = 'Positive')) as snippets
+        from analysis_quotes q where ${at} order by q.ordinal`),
       rows<Trend>(sql`
         select finding_id as "findingId", claim, horizon, thin
         from analysis_trends where ${at}`),

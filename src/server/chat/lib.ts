@@ -1,5 +1,6 @@
 // Pure helpers for the chat agent; no DB or Next imports so they run under vitest.
 import { z } from "zod";
+import { EU27 } from "../../lib/markets"; // relative: vitest has no @ alias
 import type { Scope } from "@/server/analysis/queries";
 
 const code = (re: RegExp) =>
@@ -28,10 +29,6 @@ export function parseScope(page: unknown): Scope {
   const p = pageSchema.parse(page ?? {});
   return { derivate: p.derivate, country: p.region, engine: p.engine };
 }
-
-const EU27 = new Set(
-  "AT BE BG HR CY CZ DK EE FI FR DE GR IE IT LV LT LU MT NL PL PT RO SK SI ES SE".split(" "),
-);
 
 // ponytail: GB, NO, CH, … fall into RoW; confirm against the sales workbook's market definition.
 /** ISO country → sales market code used by the `sales` table. */

@@ -10,7 +10,9 @@ import {
 import { int, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getFeatureDetail, type Finding, type Signal } from "@/server/situation/queries";
+import { Highlighted } from "@/components/feedback";
 import {
+  ASSESSMENTS,
   AssessmentBadge,
   Cited,
   DIRECTION_LABEL,
@@ -21,7 +23,14 @@ import {
   num,
   sentence,
   target,
+  unjargon,
 } from "./parts";
+
+const QUOTE_BORDER: Record<string, string> = {
+  problem: "border-l-destructive",
+  request: "border-l-sky-500",
+  strength: "border-l-emerald-500",
+};
 
 const OPTION_LABEL: Record<string, string> = {
   ours: "Today (ours)",
@@ -86,7 +95,7 @@ export async function FeatureDetailView({
             <div className="rounded-lg border p-4">
               <p className="text-sm leading-relaxed">
                 <span className="font-medium">{INTENTS[r.changeIntent]}: </span>
-                {r.statement}
+                {unjargon(r.statement)}
               </p>
               <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
                 <Stat
@@ -96,7 +105,7 @@ export async function FeatureDetailView({
                     "set by PM"
                   }
                 />
-                <Stat label="Why this target" value={r.targetRule ?? "–"} />
+                <Stat label="Why this target" value={r.targetRule ? unjargon(r.targetRule) : "–"} />
                 <Stat label="Current model" value={BASELINE_STATUS[r.baselineStatus] ?? "–"} />
               </dl>
               {r.options.length > 0 && (
@@ -132,12 +141,12 @@ export async function FeatureDetailView({
           title="Why"
           hint={
             f.method === "judge"
-              ? `Judged by the LLM with a fixed rubric; checked by code rules (${f.guardStatus}). Code suggested: ${f.ruleSuggestion}.`
+              ? `Judged by the LLM with a fixed rubric; checked by code rules (${f.guardStatus}). Code suggested: ${ASSESSMENTS[f.ruleSuggestion ?? ""]?.label ?? f.ruleSuggestion}.`
               : "Rule-based: computed by code from the shares and comparisons (low certainty)."
           }
         >
-          {f.whatExactly && <p className="text-sm font-medium">{f.whatExactly}</p>}
-          {f.reasoning && <Cited text={f.reasoning} />}
+          {f.whatExactly && <p className="text-sm font-medium">{unjargon(f.whatExactly)}</p>}
+          {f.reasoning && <Cited text={unjargon(f.reasoning)} />}
           <dl className="grid grid-cols-3 gap-2 text-sm">
             <Stat label="Certainty" value={f.certainty ?? "–"} />
             <Stat label="Widespread" value={f.widespread ?? "–"} />
@@ -149,7 +158,7 @@ export async function FeatureDetailView({
           {f.facts.length > 0 && (
             <ul className="list-disc pl-5 text-sm text-muted-foreground">
               {f.facts.map((x) => (
-                <li key={x}>{x}</li>
+                <li key={x}>{unjargon(x)}</li>
               ))}
             </ul>
           )}
@@ -189,11 +198,19 @@ export async function FeatureDetailView({
           empty={!d.quotes.length && "No feedback examples."}
         >
           {d.quotes.map((q) => (
-            <figure key={q.sourceId} className="rounded-lg border p-3 text-sm">
-              <blockquote className="leading-relaxed">{q.text}</blockquote>
+            <figure
+              key={q.sourceId}
+              className={cn(
+                "rounded-lg border border-l-4 p-3 text-sm",
+                QUOTE_BORDER[q.direction ?? ""] ?? "border-l-muted-foreground/40",
+              )}
+            >
+              <blockquote className="leading-relaxed">
+                <Highlighted text={q.text} marks={q.snippets} />
+              </blockquote>
               <figcaption className="mt-2 text-xs text-muted-foreground">
                 {q.direction ? DIRECTION_LABEL[q.direction] : "–"} ·{" "}
-                <span className="font-mono">{q.sourceId.replace("fb:", "")}</span>
+                <span className="font-mono">{q.sourceId.replace(/^.*:/, "")}</span>
               </figcaption>
             </figure>
           ))}
