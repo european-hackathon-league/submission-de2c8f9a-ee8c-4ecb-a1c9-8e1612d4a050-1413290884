@@ -8,11 +8,13 @@ import { Streamdown } from "streamdown";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AiChat02Icon,
+  Cancel01Icon,
   MessageAdd01Icon,
   SentIcon,
   SidebarRightIcon,
   StopIcon,
 } from "@hugeicons/core-free-icons";
+import { type Attachment, useChatContext } from "@/components/chat-context";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,9 +54,13 @@ type ToolPart = {
 const toolParts = (m: UIMessage) =>
   m.parts.filter((p) => p.type.startsWith("tool-")) as unknown as ToolPart[];
 
-/** Every verbatim a tool returned in this thread, by feedback id; only these can be cited. */
+const attachments = (m: UIMessage) =>
+  (m.metadata as { attached?: Attachment[] } | undefined)?.attached ?? [];
+
+/** Every verbatim a tool returned or the user attached in this thread, by feedback id; only these can be cited. */
 function citedIndex(messages: UIMessage[]) {
   const index = new Map<string, Cited>();
+  for (const m of messages) for (const a of attachments(m)) index.set(a.id, a);
   for (const m of messages)
     for (const p of toolParts(m))
       if (p.state === "output-available" && Array.isArray(p.output))
@@ -63,7 +69,7 @@ function citedIndex(messages: UIMessage[]) {
 }
 
 export function ChatPanel() {
-  const [open, setOpen] = useState(true);
+  const { open, setOpen, attached, setAttached, sendRef } = useChatContext();
   const saved = useSyncExternalStore(
     noSubscribe,
     () => Math.max(Number(localStorage.getItem(WIDTH_KEY)) || 0, MIN_WIDTH),
@@ -85,11 +91,19 @@ export function ChatPanel() {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
   }, [messages]);
 
-  const send = (text: string) => {
-    if (!text.trim() || busy) return;
-    sendMessage({ text, metadata: { page } }, { body: { page } });
+  const send = (text: string, cards = attached) => {
+    if (!text.trim() || busy) return false;
+    sendMessage(
+      { text, metadata: { page, ...(cards.length && { attached: cards }) } },
+      { body: { page } },
+    );
     setInput("");
+    setAttached([]);
+    return true;
   };
+  useEffect(() => {
+    sendRef.current = send;
+  });
 
   const startResize = (e: React.PointerEvent) => {
     const startX = e.clientX;
@@ -186,9 +200,18 @@ export function ChatPanel() {
               m.role === "user" ? (
                 <div
                   key={m.id}
-                  className="ml-6 self-end rounded-lg bg-muted px-3 py-2 text-sm whitespace-pre-wrap"
+                  className="ml-6 flex flex-col items-end gap-1 self-end text-sm whitespace-pre-wrap"
                 >
-                  {m.parts.map((p) => (p.type === "text" ? p.text : "")).join("")}
+                  {attachments(m).length > 0 && (
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {attachments(m).map((a) => (
+                        <Citation key={a.id} c={a} />
+                      ))}
+                    </div>
+                  )}
+                  <div className="rounded-lg bg-muted px-3 py-2">
+                    {m.parts.map((p) => (p.type === "text" ? p.text : "")).join("")}
+                  </div>
                 </div>
               ) : (
                 <div key={m.id} className="flex min-w-0 flex-col gap-3 text-sm">
@@ -207,6 +230,27 @@ export function ChatPanel() {
             )}
             {error && <p className="text-xs text-destructive">Something went wrong. Try again.</p>}
           </div>
+          {attached.length > 0 && (
+            <ul aria-label="Attached feedback" className="flex flex-wrap gap-1 px-2">
+              {attached.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex max-w-full items-center gap-1 rounded-md border bg-muted/50 py-0.5 pl-2 text-xs"
+                >
+                  <span className="font-mono">{a.id}</span>
+                  <span className="truncate text-muted-foreground">{a.term}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={`Remove ${a.id}`}
+                    onClick={() => setAttached(attached.filter((x) => x.id !== a.id))}
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
           <form
             className="flex items-end gap-2 p-2"
             onSubmit={(e) => {
@@ -223,7 +267,7 @@ export function ChatPanel() {
                   send(input);
                 }
               }}
-              placeholder="Ask a question…"
+              placeholder={attached.length ? "Ask about the attached feedback…" : "Ask a question…"}
               aria-label="Chat message"
               className="max-h-40 min-h-9 resize-none"
               rows={1}

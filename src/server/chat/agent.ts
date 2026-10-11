@@ -47,7 +47,8 @@ const INSTRUCTIONS = `You are the BMWow analysis assistant. Product teams at BMW
 - "Current page" below is what the user is looking at. "This car", "here" and ranks like "second" refer to it.
 - To explain a rank, compare the category's reach and severity with its neighbours: why it sits above the next one and below the previous one.
 - "Next iteration" means the next vehicle generation or LCI of the car. Recommend from the top priorities, demand and evidence. Weigh by the sales volume and 2030 trend of the affected markets when it changes the picture, and say that you did.
-- Ground claims about what customers say in verbatims returned by searchFeedback or getEvidence. Cite each such claim with the feedback id in square brackets, e.g. [G70-0042]. Only cite ids that a tool returned. Never invent ids, quotes or numbers.
+- Ground claims about what customers say in verbatims returned by searchFeedback or getEvidence. Cite each such claim with the feedback id in square brackets, e.g. [G70-0042]. Only cite ids that a tool returned or the user attached. Never invent ids, quotes or numbers.
+- "Attached feedback" in a user message is the user's focus: answer about it and cite it by id. For a solution request, find similar feedback with searchFeedback (how widespread is it?) and known fixes or best practices with searchWeb.
 - Tools take an explicit scope. Pass the current page's values unless the user asks about another car, country or engine; null means all.
 - If the data cannot answer the question, say so.
 - Answer in the user's language. Quote verbatims in their original language.
@@ -248,14 +249,49 @@ const dataTools = {
   }),
 };
 
+/** Feedback the user attached in the chat; client-supplied, so shape-checked and capped. */
+const attachedSchema = z
+  .array(
+    z.object({
+      id: z.string().max(32),
+      derivate: z.string().nullable(),
+      country: z.string().nullable(),
+      engine: z.string().nullable(),
+      source: z.string().nullable(),
+      text: z.string().max(5000),
+      quote: z.string().nullable(),
+      term: z.string(),
+      issue: z.string(),
+      score: z.number(),
+      category: z.string(),
+      tone: z.enum(["Negative", "Positive"]),
+    }),
+  )
+  .max(20);
+
+function attachedText(raw: unknown) {
+  const cards = attachedSchema.safeParse(raw);
+  if (!cards.success || !cards.data.length) return null;
+  const lines = cards.data.map(
+    (a) =>
+      `- [${a.id}] ${[a.derivate, countryName(a.country), a.engine, a.source].filter(Boolean).join(" · ")}; ${a.category} · ${a.term} · ${a.issue} · ${a.tone} intensity ${a.score.toFixed(2)}${a.quote ? `; quote: "${a.quote}"` : ""}\n  "${a.text}"`,
+  );
+  return `(Attached feedback:\n${lines.join("\n")})`;
+}
+
 /** Earlier questions may come from other pages; say which, so "this car" stays unambiguous. */
 function tagPages(messages: UIMessage[]): UIMessage[] {
   return messages.map((m) => {
-    const page = (m.metadata as { page?: unknown } | undefined)?.page;
-    if (m.role !== "user" || !page) return m;
+    const meta = m.metadata as { page?: unknown; attached?: unknown } | undefined;
+    if (m.role !== "user" || !meta?.page) return m;
+    const attached = attachedText(meta.attached);
     return {
       ...m,
-      parts: [{ type: "text", text: `(Asked on: ${fmtScope(parseScope(page))})` }, ...m.parts],
+      parts: [
+        { type: "text", text: `(Asked on: ${fmtScope(parseScope(meta.page))})` },
+        ...(attached ? [{ type: "text" as const, text: attached }] : []),
+        ...m.parts,
+      ],
     };
   });
 }
