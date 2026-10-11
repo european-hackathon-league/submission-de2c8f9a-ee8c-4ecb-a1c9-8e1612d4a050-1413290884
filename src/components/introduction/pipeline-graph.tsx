@@ -29,6 +29,7 @@ import {
   type Edge,
   type Node,
   type NodeProps,
+  type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
@@ -252,7 +253,6 @@ const edges: Edge[] = [
     type: "smoothstep",
     markerEnd: arrow,
     animated: true,
-    label: "Missing competitor data: 1 research round",
     style: { strokeDasharray: "6 4" },
   },
 ];
@@ -296,8 +296,18 @@ function FullscreenButton({
   );
 }
 
-/** The analysis pipeline as a read-only graph: pan and zoom, nothing to edit. */
-export function PipelineGraph() {
+/** A read-only React Flow canvas: pan and zoom, nothing to edit, with a fullscreen toggle. */
+export function FlowCanvas({
+  nodes,
+  edges,
+  nodeTypes,
+  className,
+}: {
+  nodes: Node[];
+  edges: Edge[];
+  nodeTypes: NodeTypes;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const full = useSyncExternalStore(
     subscribeFullscreen,
@@ -306,7 +316,7 @@ export function PipelineGraph() {
   );
   return (
     // bg-card: the fullscreen element would otherwise sit on the browser's black backdrop.
-    <div ref={ref} className="aspect-[5/2] min-h-80 w-full bg-card">
+    <div ref={ref} className={cn("min-h-80 w-full bg-card", className)}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -327,4 +337,9 @@ export function PipelineGraph() {
       </ReactFlow>
     </div>
   );
+}
+
+/** The analysis pipeline as a read-only graph. */
+export function PipelineGraph() {
+  return <FlowCanvas nodes={nodes} edges={edges} nodeTypes={nodeTypes} className="aspect-[5/2]" />;
 }

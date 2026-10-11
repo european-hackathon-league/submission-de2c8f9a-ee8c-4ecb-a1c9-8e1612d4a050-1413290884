@@ -1,4 +1,5 @@
 import { ActorLegend, PipelineGraph } from "@/components/introduction/pipeline-graph";
+import { SchemaGraph } from "@/components/introduction/schema-graph";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function IntroductionPage() {
@@ -19,6 +20,18 @@ export default function IntroductionPage() {
         </CardHeader>
         <CardContent>
           <PipelineGraph />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Feedback database</CardTitle>
+          <CardDescription>
+            A feedback is stored once; each aspect it mentions is its own row, joined by{" "}
+            <code>feedback_entry_id</code>. Counting feedbacks counts entries, not aspects.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SchemaGraph />
         </CardContent>
       </Card>
     </>
