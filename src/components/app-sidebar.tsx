@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Analytics01Icon, Car01Icon, ClipboardListIcon } from "@hugeicons/core-free-icons";
+import { Analytics01Icon, Car01Icon, Task01Icon } from "@hugeicons/core-free-icons";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -22,7 +22,7 @@ const user = { name: "Product Manager", email: "pm@bmw.example" };
 
 const NAV = [
   { href: "/analysis", label: "Analysis", icon: Analytics01Icon },
-  { href: "/situation", label: "Situation analysis", icon: ClipboardListIcon },
+  { href: "/situation", label: "Situation analysis", icon: Task01Icon }, // stroke-only; ClipboardListIcon's filled outline renders bold
 ];
 
 /** The page links; the active one follows the URL (read inside Suspense, so prerendering is not blocked). */

@@ -11,8 +11,6 @@ import {
 } from "@/components/ui/chart";
 import { int, pct } from "@/lib/format";
 
-const KEYS = [...VERDICTS, "unclear"] as const;
-
 /** One-line axis label; recharts' default tick wraps long category names. */
 const tick =
   (format: (v: string) => string = (v) => v) =>
@@ -22,14 +20,16 @@ const tick =
     </text>
   );
 const verdictConfig = Object.fromEntries(
-  KEYS.map((k) => [k, { label: ASSESSMENTS[k].label, color: ASSESSMENTS[k].fill }]),
+  VERDICTS.map((k) => [k, { label: ASSESSMENTS[k].label, color: ASSESSMENTS[k].fill }]),
 ) satisfies ChartConfig;
 
 /** Donut of feature verdicts with the total in the middle and a legend with counts. */
 export function VerdictDonut({ counts }: { counts: Record<string, number> }) {
-  const data = KEYS.map((k) => ({ key: k, n: counts[k] ?? 0, fill: `var(--color-${k})` })).filter(
-    (d) => d.n,
-  );
+  const data = VERDICTS.map((k) => ({
+    key: k,
+    n: counts[k] ?? 0,
+    fill: `var(--color-${k})`,
+  })).filter((d) => d.n);
   const total = data.reduce((s, d) => s + d.n, 0);
   return (
     <div className="flex items-center gap-6">
@@ -66,7 +66,7 @@ export function VerdictDonut({ counts }: { counts: Record<string, number> }) {
         </PieChart>
       </ChartContainer>
       <ul className="flex flex-col gap-1.5 text-sm">
-        {KEYS.map((k) => (
+        {VERDICTS.map((k) => (
           <li key={k} className="flex items-center gap-2" title={ASSESSMENTS[k].hint}>
             <span className={`size-2.5 rounded-sm ${ASSESSMENTS[k].bar}`} />
             <span className="w-36">{ASSESSMENTS[k].label}</span>
@@ -210,7 +210,8 @@ export function VoiceChart({ rows }: { rows: VoiceRow[] }) {
             dataKey="problem"
             stackId="v"
             fill="var(--color-problem)"
-            radius={[4, 0, 0, 4]}
+            // Negative bars have negative width, so Recharts mirrors the radii.
+            radius={[0, 4, 4, 0]}
             className="cursor-pointer"
             onClick={go("problemHref")}
           />
