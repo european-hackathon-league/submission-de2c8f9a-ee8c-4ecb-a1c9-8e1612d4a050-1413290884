@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import re
 from functools import cache
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -49,6 +51,11 @@ class StructureRules(_Rules):
     widespread_min_ci_low: float
     thin_words: list[str]
     lower_is_better: list[str]
+    higher_is_better_units: list[str] = Field(default_factory=list)
+    lower_is_better_units: list[str] = Field(default_factory=list)
+    powertrain_patterns: dict[str, list[str]] = Field(default_factory=dict)
+    rule_min_signal: float = 0.01
+    rule_min_strength: float = 0.02
 
 
 class CompetitionRules(_Rules):
@@ -62,6 +69,13 @@ class GapFillRules(_Rules):
     min_customer_ci_low: float
 
 
+class CandidateRules(_Rules):
+    assessments: list[str]
+    default_target: dict[str, Literal["competitor_median", "best_in_class", "ours"]]
+    max_customer_facts: int
+    from_rule_based: bool = False
+
+
 class Rules(_Rules):
     thin: ThinRules
     feedback: FeedbackRules
@@ -69,6 +83,7 @@ class Rules(_Rules):
     structure: StructureRules
     competition: CompetitionRules
     gap_fill: GapFillRules
+    candidates: CandidateRules
 
 
 @cache
@@ -100,6 +115,59 @@ def feature_for_term(term: str | None) -> str | None:
         if any(p.search(text) for p in patterns):
             return feature
     return None
+
+
+class StudyMapping(BaseModel):
+    feature: str
+    status: str
+
+
+def load_study_mappings(path: Path) -> dict[str, StudyMapping]:
+    """Study question -> feature key from the private curation file (proposed or reviewed); empty
+    when the file is missing. The importer only turns reviewed mappings into graph Signals; the agent
+    also reads proposed ones and labels them as such."""
+    if not path.exists():
+        return {}
+    knowledge = json.loads(path.read_text(encoding="utf-8")).get("knowledge", {})
+    keys = knowledge.get("feature_keys", {})
+    return {
+        question.strip().lower(): StudyMapping(feature=keys[m["feature_id"]], status=m["status"])
+        for question, m in knowledge.get("study_mappings", {}).items()
+        if m.get("feature_id") in keys
+    }
+
+
+Powertrain = Literal["bev", "phev", "ice"]
+
+
+@cache
+def _compiled_powertrains() -> list[tuple[str, list[re.Pattern[str]]]]:
+    patterns = load_rules().structure.powertrain_patterns
+    return [(pt, [re.compile(x, re.IGNORECASE) for x in xs]) for pt, xs in patterns.items()]
+
+
+def powertrain_of(text: str | None) -> Powertrain | None:
+    """bev / phev / ice from a variant or model name, None if no pattern or several match
+    (plug-in hybrids are checked before combustion, since '530e' must not read as ICE)."""
+    if not text:
+        return None
+    hits = [pt for pt, patterns in _compiled_powertrains() if any(p.search(text) for p in patterns)]
+    if "phev" in hits:
+        return "phev"
+    return hits[0] if len(hits) == 1 else None  # type: ignore[return-value]
+
+
+def engine_type(engine_types: list[str]) -> Powertrain | None:
+    """The one known engine type an ontology context names, else None."""
+    known = {e for e in engine_types if e in ("bev", "phev", "ice")}
+    return known.pop() if len(known) == 1 else None  # type: ignore[return-value]
+
+
+def is_lower_better(attribute: str, unit: str) -> bool:
+    s, u = load_rules().structure, unit.strip().lower()
+    if u in s.lower_is_better_units:
+        return True
+    return attribute in s.lower_is_better and u not in s.higher_is_better_units
 
 
 def is_generic_term(term: str | None) -> bool:

@@ -18,7 +18,7 @@ from __future__ import annotations
 import operator
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
@@ -30,7 +30,7 @@ from .. import router
 from ..config import get_settings
 from ..llm import get_chat_model
 from ..prompting import render_prompt, render_regions
-from ..rules import load_rules
+from ..rules import engine_type, load_rules, powertrain_of
 from ..sources import Budget, attribute_source, clip, render_attribute
 from ..tools.knowledge import AttributeValue, ModelNode
 from ..tools.web_search import (
@@ -43,8 +43,8 @@ from ..tools.web_search import (
 from ..validation import number_in_text
 from .common import AgentContext, DraftFindings, run_tool_loop, structured_call
 
-MAX_ATTRIBUTES_PER_COMPETITOR = 12
-PAGE_CHARS = 3500
+MAX_ATTRIBUTES_PER_COMPETITOR = 18
+PAGE_CHARS = 6000
 
 
 class ResearchTask(TypedDict):
@@ -73,6 +73,11 @@ class ExtractedValue(BaseModel):
         description="region or market the value applies to, if the page says"
     )
     variant: str | None = Field(description="trim / engine variant the value applies to, if stated")
+    powertrain: Literal["bev", "phev", "ice", "unknown"] = Field(
+        default="unknown",
+        description="powertrain of that variant: bev (battery electric), phev (plug-in hybrid), "
+        "ice (petrol/diesel/mild hybrid); unknown if the page does not make it clear",
+    )
     quote: str = Field(
         description="verbatim sentence from the page that states it; empty if not found"
     )
@@ -113,6 +118,19 @@ async def run(ctx: AgentContext) -> None:
             regions = m.regions or brief.regions
             competitors[m.name] = Competitor(m.name, m.brand, regions)
             tasks.append(_task(ctx, m.name, regions, values))
+    elif hasattr(get_search_backend(), "competitors"):
+        # The approved web corpus names the competitors; no web discovery needed.
+        backend = get_search_backend()
+        corpus_set = backend.competitors(brief.regions, brief.segment)  # type: ignore[attr-defined]
+        ctx.mark(
+            "competitors",
+            "partial",
+            "no competitors in the knowledge layer; taken from the curated web corpus "
+            f"(segment {brief.segment})",
+        )
+        for name, regions in list(corpus_set.items())[: settings.max_competitors]:
+            competitors[name] = Competitor(name, None, regions)
+            tasks.append(_task(ctx, name, regions, []))
     else:
         ctx.mark(
             "competitors", "partial", "no competitors in the knowledge layer; discovered on the web"
@@ -154,8 +172,28 @@ def _ontology_finding(ctx: AgentContext, model: ModelNode, av: AttributeValue) -
     src = ctx.add_source(attribute_source(model, av))
     numeric = isinstance(av.value, (int, float)) and not isinstance(av.value, bool)
     unit = f" {av.unit}" if av.unit else ""
-    note = f" ({av.source_note})" if av.source_note else ""
+    note = f" ({av.source_note.split(';')[0]})" if av.source_note else ""  # readable statement only
     prefix = "The source reports" if av.references else ""
+    variant = av.variant
+    pt = (
+        engine_type(av.context.engine_types if av.context else [])
+        or powertrain_of(f"{variant or ''} {model.name}")
+        or (model.powertrain if model.powertrain in ("bev", "phev", "ice") else None)
+    )
+    qualifier = (
+        "; ".join(
+            x
+            for x in (
+                av.measurement.test_standard
+                if av.measurement and av.measurement.test_standard
+                else "",
+                f"variant {variant}" if variant else "",
+                f"powertrain {pt}" if pt else "",
+            )
+            if x
+        )
+        or av.source_note
+    )
     return ctx.finding(
         attribute=av.attribute,
         claim=f"{prefix} {model.name} has {av.attribute.replace('_', ' ')} of {av.value}{unit}{note}.",
@@ -164,7 +202,7 @@ def _ontology_finding(ctx: AgentContext, model: ModelNode, av: AttributeValue) -
         source_ids=[src.id],
         confidence="high",
         quantity=Quantity(
-            value=float(av.value), unit=av.unit or "", qualifier=av.source_note, origin="record"
+            value=float(av.value), unit=av.unit or "", qualifier=qualifier, origin="record"
         )
         if numeric and av.unit
         else None,
@@ -217,26 +255,34 @@ async def _research(
     """Searches (one per feature, in priority order) and page extractions within the competitor's
     fixed share of the agent budget."""
     rules = load_rules().competition
-    locale = next(iter(_locales(ctx, task["regions"]).values()), None)
+    backend = get_search_backend()
+    local = getattr(backend, "is_local", False)  # a local corpus costs no web calls
+    locales = list(_locales(ctx, task["regions"]).values()) or [None]
     pages: dict[str, tuple[WebPage, list[str]]] = {}  # source id -> page, features it may hold
+    exhausted = False
     for feature in task["attributes"]:
-        if not budget.take("call"):
-            ctx.mark(f"web:{competitor.name}", "partial", "search budget exhausted")
-            break
         query = f"{competitor.name} {_query_terms(ctx, feature)}"
-        try:
-            found = await get_search_backend().search_pages(
-                query, limit=rules.results_per_query, locale=locale
-            )
-        except Exception as exc:  # noqa: BLE001 - report, continue with the next feature
-            ctx.errors.append(f"search {query!r}: {type(exc).__name__}: {exc}")
-            continue
-        kept = [p for p in found if _about(p, competitor)][: rules.pages_per_feature]
-        for page in kept:
-            source = ctx.add_source(page_to_source(page, query), full_text=page.markdown)
-            pages.setdefault(source.id, (page, []))[1].append(feature)
+        for locale in locales:  # every region the competitor is sold in
+            if not local and not budget.take("call"):
+                ctx.mark(f"web:{competitor.name}", "partial", "search budget exhausted")
+                exhausted = True
+                break
+            try:
+                found = await backend.search_pages(
+                    query, limit=rules.results_per_query, locale=locale
+                )
+            except Exception as exc:  # noqa: BLE001 - report, continue with the next feature
+                ctx.errors.append(f"search {query!r}: {type(exc).__name__}: {exc}")
+                continue
+            kept = [p for p in found if _about(p, competitor)][: rules.pages_per_feature]
+            for page in kept:
+                source = ctx.add_source(page_to_source(page, query), full_text=page.markdown)
+                pages.setdefault(source.id, (page, []))[1].append(feature)
+        if exhausted:
+            break
     for sid, (page, features) in pages.items():
-        if not budget.take("page"):
+        # A local corpus page is read once per competitor; only live scrapes use the budget.
+        if not local and not budget.take("page"):
             ctx.mark(f"web:{competitor.name}", "partial", "page budget exhausted")
             break
         await _extract(ctx, competitor, sid, page, list(dict.fromkeys(features)))
@@ -276,7 +322,11 @@ async def _extract(
         region = region if region in competitor.regions else None
         quantity = None
         if v.value is not None and v.unit and number_in_text(v.value, v.quote, v.unit):
-            qualifier = "; ".join(x for x in (v.test_standard, v.variant, region) if x)
+            variant = f"variant {v.variant}" if v.variant else None
+            pt = v.powertrain if v.powertrain != "unknown" else None
+            pt = pt or powertrain_of(f"{v.variant or ''} {competitor.name}")
+            powertrain = f"powertrain {pt}" if pt else None
+            qualifier = "; ".join(x for x in (v.test_standard, variant, powertrain, region) if x)
             quantity = Quantity(
                 value=v.value, unit=v.unit.strip(), qualifier=qualifier, origin="source_text"
             )

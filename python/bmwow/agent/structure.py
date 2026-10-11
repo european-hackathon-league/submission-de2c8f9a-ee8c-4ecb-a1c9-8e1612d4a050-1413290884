@@ -13,6 +13,8 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 
+from pydantic import BaseModel
+
 from bmwow.agent.models.evidence import (
     AgentName,
     AgentReport,
@@ -29,10 +31,10 @@ from bmwow.agent.models.evidence import (
     ValueComparison,
 )
 
-from .rules import Rules
+from .rules import Rules, is_lower_better, load_rules, powertrain_of
 from .sources import clip
 from .stats import distribution, rank_position, relative_difference
-from .validation import numbers_in
+from .validation import unsupported_numbers
 
 SIGNIFICANT = 0.05
 
@@ -41,18 +43,100 @@ def label_of(attribute: str) -> str:
     return attribute.removeprefix("unmapped:").replace("_", " ")
 
 
+_UNITS = {
+    "kilometres": "km",
+    "kilometers": "km",
+    "kilometre": "km",
+    "kilometer": "km",
+    "minutes": "min",
+    "minute": "min",
+    "mins": "min",
+    "€": "eur",
+    "euro": "eur",
+    "euros": "eur",
+    "$": "usd",
+    "us$": "usd",
+    "dollars": "usd",
+    "litres": "l",
+    "liters": "l",
+    "litre": "l",
+    "liter": "l",
+    "cubic feet": "cu ft",
+    "cu.ft.": "cu ft",
+    "cu. ft.": "cu ft",
+    "cu.ft": "cu ft",
+    "ft3": "cu ft",
+    "inches": "inch",
+    "in": "inch",
+    '"': "inch",
+    "horsepower": "hp",
+    "bhp": "hp",
+    "kwh/100km": "kwh/100 km",
+    "speakers": "speakers",
+    "loudspeakers": "speakers",
+    "zones": "zone",
+    "seconds": "s",
+    "sec": "s",
+    "secs": "s",
+    "£": "gbp",
+    "gbp": "gbp",
+}
+_MIN_SEC = re.compile(r"^(?:m|min)\s*(\d{1,2})\s*s$")  # "19 m 38 s" read as value 19, unit "m 38 s"
+
+
+def normalize_unit(unit: str) -> str:
+    u = unit.strip().lower()
+    return _UNITS.get(u, u)
+
+
+def normalize_quantity(value: float, unit: str) -> tuple[float, str]:
+    """Same unit, same spelling; '<min> m <sec> s' becomes minutes. No cross-unit conversion: US cubic
+    feet (SAE) and EU litres (VDA) are measured differently and stay apart."""
+    m = _MIN_SEC.match(unit.strip().lower())
+    if m:
+        return round(value + int(m.group(1)) / 60, 2), "min"
+    return value, normalize_unit(unit)
+
+
+def _charge_time_unit(unit: str, condition: str) -> str:
+    """A charging time written as "21 m" for a 10-80% window means minutes, not metres."""
+    return "min" if unit == "m" and re.search(r"\d+-\d+%", condition) else unit
+
+
+def normalize_condition(text: str) -> str:
+    """Same test standard, same key: "10% to 80%" == "10-80%", case and spacing ignored."""
+    t = text.lower()
+    t = re.sub(
+        r"(\d+)\s*%?\s*(?:capacity|soc|state of charge|charge)?\s*(?:to|-|–|—)\s*(\d+)\s*%",
+        r"\1-\2%",
+        t,
+    )
+    return re.sub(r"\s+", " ", t).strip(" ;,")
+
+
 def _condition(finding: Finding, sources: dict[str, Source]) -> str:
-    """The comparison condition (test standard and constraints) of a value; the ontology's
-    measurement wins over the free-text qualifier."""
+    """The comparison key of a value: test standard (the ontology's measurement wins over the
+    free-text qualifier) plus the powertrain. Trim variants and the region are not part of it, but
+    an EV value is never compared with a plug-in hybrid or combustion one."""
+    standard = ""
     for sid in finding.source_ids:
         m = sources[sid].measurement if sid in sources else None
-        if m is not None and (m.test_standard or m.conditions):
-            return "; ".join(x for x in [m.test_standard or "", *m.conditions] if x)
+        if m is not None and m.test_standard:
+            # Free-text footnote conditions stay in the fact text; they are not a matching key.
+            standard = m.test_standard
+            break
     q = finding.quantity.qualifier if finding.quantity else ""
-    q = re.sub(r"\bhorizon \S+", "", q)
-    if finding.region:
-        q = re.sub(rf"\b{re.escape(finding.region)}\b", "", q)
-    return re.sub(r"\s+", " ", q).strip(" ;,")
+    parts = [x.strip() for x in re.sub(r"\bhorizon \S+", "", q).split(";")]
+    if not standard:
+        standard = "; ".join(
+            x
+            for x in parts
+            if x and not x.lower().startswith(("variant ", "powertrain ")) and x != finding.region
+        )
+    pt = next((x.split()[1] for x in parts if x.lower().startswith("powertrain ")), None)
+    variant = next((x for x in parts if x.lower().startswith("variant ")), "")
+    pt = pt or powertrain_of(variant) or powertrain_of(parts[0]) or powertrain_of(finding.subject)
+    return normalize_condition("; ".join(x for x in (standard, pt or "") if x))
 
 
 def _fmt(value: float) -> str:
@@ -66,24 +150,34 @@ def _value_comparisons(
     sources: dict[str, Source],
     rules: Rules,
 ) -> list[ValueComparison]:
-    lower = attribute in rules.structure.lower_is_better
-    groups: dict[tuple[str, str, str | None], list[Finding]] = defaultdict(list)
+    groups: dict[tuple[str, str, str | None], list[tuple[Finding, float]]] = defaultdict(list)
     for f in competitor:
         if f.quantity is not None and f.quantity.unit and f.quantity.origin != "computed":
-            key = (f.quantity.unit.strip().lower(), _condition(f, sources).lower(), f.region)
-            groups[key].append(f)
-    own: dict[tuple[str, str], float] = {}
+            value, unit = normalize_quantity(f.quantity.value, f.quantity.unit)
+            condition = _condition(f, sources)
+            unit = _charge_time_unit(unit, condition)
+            groups[(unit, condition, f.region)].append((f, value))
+    own: dict[tuple[str, str], float] = {}  # our best variant per unit and condition
     for f in ours:
         if f.quantity is not None and f.quantity.unit and f.quantity.origin == "record":
-            own.setdefault(
-                (f.quantity.unit.strip().lower(), _condition(f, sources).lower()), f.quantity.value
-            )
+            value, unit = normalize_quantity(f.quantity.value, f.quantity.unit)
+            condition = _condition(f, sources)
+            unit = _charge_time_unit(unit, condition)
+            key = (unit, condition)
+            better = min if is_lower_better(attribute, unit) else max
+            own[key] = better(own.get(key, value), value)
     out: list[ValueComparison] = []
     for (unit, condition, region), findings in sorted(groups.items(), key=lambda kv: str(kv[0])):
-        values = [f.quantity.value for f in findings if f.quantity is not None]
+        # One value per competitor: several pages (or trims) of one model must not outweigh the
+        # others, so each competitor contributes the median of its values; n counts competitors.
+        per_competitor: dict[str, list[float]] = defaultdict(list)
+        for f, v in findings:
+            per_competitor[f.subject].append(v)
+        values = [m.median for vs in per_competitor.values() if (m := distribution(vs))]
         d = distribution(values)
         if d is None:
             continue
+        lower = is_lower_better(attribute, unit)
         mine = own.get((unit, condition))
         if mine is None and (unit, "") in own and not condition:
             mine = own[(unit, "")]
@@ -96,7 +190,7 @@ def _value_comparisons(
             median=d.median,
             maximum=d.maximum,
             lower_is_better=lower,
-            finding_ids=[f.id for f in findings],
+            finding_ids=[f.id for f, _ in findings],
         )
         if mine is not None:
             rank, size = rank_position(mine, values, higher_is_better=not lower)
@@ -157,7 +251,8 @@ def _comparisons(pkg: EvidencePackage) -> list[str]:
             f"{s.ci_low:.1%}–{s.ci_high:.1%}){', thin sample' if s.thin else ''}."
         )
         if s.differs_from:
-            line += f" Significantly different from {s.differs_from} (p={s.p_value:.2g})."
+            p = "p<0.001" if (s.p_value or 0) < 0.001 else f"p={s.p_value:.2g}"
+            line += f" Significantly different from {s.differs_from} ({p})."
         lines.append(line)
     for t in pkg.trends:
         lines.append(
@@ -245,7 +340,10 @@ def assemble(
             ],
             quotes=_quotes(customer, sources, rules.structure.max_quotes_per_package),
             finding_ids=[f.id for fs in found.values() for f in fs],
-            source_ids=sorted({sid for fs in found.values() for f in fs for sid in f.source_ids}),
+            source_ids=sorted(
+                {sid for fs in found.values() for f in fs for sid in f.source_ids}
+                | {sid for t in sub_themes if t.attribute == attribute for sid in t.source_ids}
+            ),
         )
         missing = [
             name
@@ -283,6 +381,110 @@ def gap_requests(
     return wanted[: rules.gap_fill.max_features]
 
 
+class RuleResult(BaseModel):
+    assessment: str  # gap | strength | hygiene_factor | demand | unclear
+    basis: str  # "competitor + customers" | "customers only" | "trend only" | "thin"
+    reasoning: str
+    cited_ids: list[str]
+
+
+def _pooled(pkg: EvidencePackage, direction: str) -> CustomerSignal | None:
+    """The customer share across all requested regions (else the largest sample)."""
+    signals = [s for s in pkg.customers if s.direction == direction]
+    pooled = [s for s in signals if s.region is None] or signals
+    return max(pooled, key=lambda s: s.n) if pooled else None
+
+
+def rule_assessment(pkg: EvidencePackage, rules: Rules) -> RuleResult:
+    """Assessment from computed facts only (no LLM). Customer shares count by the lower bound of
+    their 95% interval; a comparison counts only with our own value in it (same unit, standard and
+    powertrain). Missing views lower the certainty, they do not make a feature unclear."""
+    t, ts = rules.structure.rule_min_signal, rules.structure.rule_min_strength
+    p, r, s = (_pooled(pkg, d) for d in ("problem", "request", "strength"))
+    pl, rl, sl = (x.ci_low if x else 0.0 for x in (p, r, s))
+    c = next((v for v in pkg.competitor_values if v.ours is not None and v.field_size), None)
+
+    def fmt(x: CustomerSignal | None, what: str) -> str:
+        return (
+            f"{x.share:.1%} {what} ({x.k} of {x.n}, CI {x.ci_low:.1%}–{x.ci_high:.1%})" if x else ""
+        )
+
+    def ids(*xs: CustomerSignal | None) -> list[str]:
+        return [x.finding_id for x in xs if x is not None]
+
+    if c is not None:
+        worse = (c.ours_vs_median or 0) > 0 if c.lower_is_better else (c.ours_vs_median or 0) < 0
+        where = (
+            f"ours {_fmt(c.ours)} {c.unit} vs competitor median {_fmt(c.median)} "
+            f"({c.condition or 'same basis'}, rank {c.ours_rank} of {c.field_size})"
+        )
+        if worse and max(pl, rl) >= t:
+            x = p if pl >= rl else r
+            return RuleResult(
+                assessment="gap",
+                basis="competitor + customers",
+                reasoning=f"We trail: {where}; customers: {fmt(x, x.direction if x else '')}.",
+                cited_ids=[*c.finding_ids, *ids(x)],
+            )
+        if not worse and pl >= t:
+            return RuleResult(
+                assessment="hygiene_factor",
+                basis="competitor + customers",
+                reasoning=f"Customers complain ({fmt(p, 'problem')}) though we do not trail: {where}.",
+                cited_ids=[*c.finding_ids, *ids(p)],
+            )
+        if c.ours_rank == 1 and (sl >= t or max(pl, rl) < t):
+            return RuleResult(
+                assessment="strength",
+                basis="competitor + customers",
+                reasoning=f"We lead: {where}" + (f"; customers: {fmt(s, 'praise')}." if s else "."),
+                cited_ids=[*c.finding_ids, *ids(s)],
+            )
+    if sl >= ts and sl > max(pl, rl):
+        return RuleResult(
+            assessment="strength",
+            basis="customers only",
+            reasoning=f"Customers praise it ({fmt(s, 'praise')}) more than they report problems or "
+            "wishes; no comparable competitor value with ours.",
+            cited_ids=ids(s, p),
+        )
+    if rl >= t and rl >= pl:
+        return RuleResult(
+            assessment="demand",
+            basis="customers only",
+            reasoning=f"Customers ask for it ({fmt(r, 'request')}); no comparable competitor value.",
+            cited_ids=ids(r),
+        )
+    if pl >= t:
+        return RuleResult(
+            assessment="gap",
+            basis="customers only",
+            reasoning=f"Customers report problems ({fmt(p, 'problem')}): the current model falls "
+            "short of what customers expect; no comparable competitor value.",
+            cited_ids=ids(p),
+        )
+    demand_trends = [x for x in pkg.trends if x.polarity == "demand" and not x.thin]
+    if demand_trends and not pkg.customers:
+        return RuleResult(
+            assessment="demand",
+            basis="trend only",
+            reasoning=f"A demand trend applies: {demand_trends[0].claim}",
+            cited_ids=[demand_trends[0].finding_id],
+        )
+    shares = [x for x in (p, r, s) if x is not None]
+    return RuleResult(
+        assessment="unclear",
+        basis="thin",
+        reasoning=(
+            "All customer shares are below the threshold "
+            f"({', '.join(fmt(x, x.direction) for x in shares)})."
+            if shares
+            else "No customer signal and no comparison with our value."
+        ),
+        cited_ids=ids(*shares),
+    )
+
+
 def render_package(pkg: EvidencePackage) -> str:
     """The package as text for the judgment, with every citable id."""
     lines = [f"# Feature: {pkg.label} ({pkg.attribute})", "", "## Facts computed by code"]
@@ -315,6 +517,12 @@ def render_package(pkg: EvidencePackage) -> str:
     lines += [f"- [{t.finding_id}] {t.claim}" for t in pkg.trends] or ["- no evidence"]
     lines += ["", "## Coverage"]
     lines += [f"- {c}" for c in pkg.coverage] or ["- all four views present"]
+    rule = rule_assessment(pkg, load_rules())
+    lines += [
+        "",
+        "## Rule-based suggestion (computed by code from the facts above)",
+        f"- {rule.assessment} (basis: {rule.basis}): {rule.reasoning}",
+    ]
     return "\n".join(lines)
 
 
@@ -341,7 +549,7 @@ def guard(
     }
     rendered = render_package(pkg)
     unknown = sorted(cited - known)
-    invented = sorted(numbers_in(text) - numbers_in(rendered))
+    invented = unsupported_numbers(text, rendered)
     checks = [
         GuardCheck(
             rule="cited_ids_exist",
