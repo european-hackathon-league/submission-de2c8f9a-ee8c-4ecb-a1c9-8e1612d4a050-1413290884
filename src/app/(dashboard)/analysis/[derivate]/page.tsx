@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { countryName, int, mood, pct, signed, signTone } from "@/lib/format";
+import { EU27, marketCountries } from "@/lib/markets";
 import { cn } from "@/lib/utils";
 import {
   getRanking,
@@ -36,7 +37,13 @@ export default function CarPage(props: PageProps<"/analysis/[derivate]">) {
 async function CarView({ params, searchParams }: PageProps<"/analysis/[derivate]">) {
   const { derivate } = await params;
   const sp: Search = await searchParams;
-  const scope: Scope = { derivate, country: one(sp.region), engine: one(sp.engine) };
+  const region = one(sp.region); // a country code or "EU"
+  const scope: Scope = {
+    derivate,
+    country: null,
+    engine: one(sp.engine),
+    countries: region ? marketCountries(region) : null,
+  };
   const [car] = (await listCars()).filter((c) => c.derivate === derivate);
   if (!car) notFound();
 
@@ -48,7 +55,8 @@ async function CarView({ params, searchParams }: PageProps<"/analysis/[derivate]
   const aspect = one(sp.aspect);
   const tone = sp.tone === "Positive" ? "Positive" : "Negative";
   const selected = ranking.rows.find((r) => r.category === aspect);
-  const where = [countryName(scope.country), scope.engine].filter(Boolean).join(" · ");
+  const where = [countryName(region), scope.engine].filter(Boolean).join(" · ");
+  const eu = options.countries.filter((o) => EU27.has(o.value)).reduce((s, o) => s + o.n, 0);
 
   return (
     <>
@@ -69,7 +77,7 @@ async function CarView({ params, searchParams }: PageProps<"/analysis/[derivate]
             param="region"
             label="Region"
             allLabel={`World (${int(car.feedback)})`}
-            options={options.countries.map((o) => ({
+            options={[...(eu ? [{ value: "EU", n: eu }] : []), ...options.countries].map((o) => ({
               value: o.value,
               label: `${countryName(o.value)} (${int(o.n)})`,
             }))}

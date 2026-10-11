@@ -237,7 +237,13 @@ async function CarView({ params, searchParams }: PageProps<"/situation/[derivate
         }
       />
 
-      <CustomerVoice ranking={ranking} sp={sp} derivate={derivate} where={where} />
+      <CustomerVoice
+        ranking={ranking}
+        sp={sp}
+        derivate={derivate}
+        region={run.region}
+        where={where}
+      />
 
       {assessed.length > 0 && <OtherFeatures rows={assessed} unclear={unclear} sp={sp} />}
 
@@ -435,11 +441,14 @@ function CustomerVoice({
   ranking,
   sp,
   derivate,
+  region,
   where,
 }: {
   ranking: Ranking;
   sp: Search;
   derivate: string;
+  /** The run's market (ALL, EU, US, CN); the full ranking opens on the same one. */
+  region: string;
   where: string;
 }) {
   const praised = [...ranking.rows].sort((a, b) => b.positive - a.positive).slice(0, 3);
@@ -469,7 +478,7 @@ function CustomerVoice({
         {rows.length > 0 && (
           <CardAction>
             <Link
-              href={`/analysis/${derivate}${one(sp.engine) ? `?engine=${one(sp.engine)}` : ""}`}
+              href={`/analysis/${derivate}${hrefWith({}, { region: region === "ALL" ? null : region, engine: one(sp.engine) })}`}
               className="text-sm text-muted-foreground hover:underline"
             >
               Full ranking
