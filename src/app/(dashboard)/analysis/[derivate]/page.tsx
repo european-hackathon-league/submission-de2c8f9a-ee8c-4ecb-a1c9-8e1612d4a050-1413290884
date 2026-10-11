@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AspectSheet, ScopeSelect } from "@/components/car-controls";
+import { VerbatimActions } from "@/components/chat-context";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -432,7 +433,16 @@ async function AspectDetail({
             </Link>
           </div>
           {evidence.slice(0, limit).map((e) => (
-            <Verbatim key={e.id} e={e} />
+            <Verbatim
+              key={e.id}
+              e={e}
+              actions={
+                <VerbatimActions
+                  card={{ ...e, category: row.category, tone }}
+                  closeHref={hrefWith(sp, { aspect: null, tone: null, n: null })}
+                />
+              }
+            />
           ))}
           {!evidence.length && <p className="text-sm text-muted-foreground">No verbatims.</p>}
           {evidence.length > limit && (
@@ -460,7 +470,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Verbatim({ e }: { e: Evidence }) {
+function Verbatim({ e, actions }: { e: Evidence; actions: React.ReactNode }) {
   const at = e.quote ? e.text.toLowerCase().indexOf(e.quote.toLowerCase()) : -1;
   return (
     <figure className="rounded-lg border p-3 text-sm">
@@ -480,7 +490,7 @@ function Verbatim({ e }: { e: Evidence }) {
       {at < 0 && e.quote && (
         <p className="mt-2 text-xs text-muted-foreground">Quote: “{e.quote}”</p>
       )}
-      <figcaption className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+      <figcaption className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
         <span className="font-mono">{e.id}</span>
         <span>{countryName(e.country)}</span>
         {e.engine && <span>{e.engine}</span>}
@@ -488,6 +498,7 @@ function Verbatim({ e }: { e: Evidence }) {
         <span>
           {e.term} · {e.issue} · intensity {e.score.toFixed(2)}
         </span>
+        {actions}
       </figcaption>
     </figure>
   );
